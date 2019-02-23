@@ -1,5 +1,5 @@
 %width height
-9 9
+3 3
 %radius
 30
 %hexagon orientation 1-flat top; 2-pointy top
@@ -7,5 +7,4 @@
 %layout 1-rectangular; 2-hex; 3-triangle; 4-trapezoid
 2
 %idx idy value
-4 -1 5
-4 3 5
+1 1 6

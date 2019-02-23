@@ -14,6 +14,7 @@ public class Level {
     private ArrayList<Hexagon<HexagonData>> fixedHexagons;
 
     Level(int width, int height, int radius, HexagonOrientation orientation, HexagonalGridLayout layout, ArrayList<LevelReader.FixedHex> fixedHexes){
+
         HexagonalGridBuilder<HexagonData> builder = new HexagonalGridBuilder<HexagonData>()
                 .setGridWidth(width)
                 .setGridHeight(height)

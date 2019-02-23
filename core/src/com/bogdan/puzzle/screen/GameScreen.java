@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.utils.Timer;
 import com.bogdan.puzzle.Puzzle;
 import com.bogdan.puzzle.hexagon.HexagonData;
 import com.bogdan.puzzle.hexagon.HexagonDataBuilder;
@@ -48,6 +49,7 @@ public class GameScreen implements Screen{
     private HexagonalGridCalculator gridCalculator;
     private GameController gameController;
     private LevelController levelController;
+    private Timer timer = new Timer();
 
     private boolean isWon = false;
 
@@ -63,6 +65,7 @@ public class GameScreen implements Screen{
         camera.setToOrtho(true, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         // Create a new game controller and get the grid of the current level
+        // The Level controller, on construction, sets the current level to the one mentioned in the preferences
         levelController = new LevelController();
         hexagonalGrid = levelController.getCurrentLevel().getHexagonalGrid();
         gridCalculator = levelController.getCurrentLevel().getGridCalculator();
@@ -95,8 +98,6 @@ public class GameScreen implements Screen{
         Gdx.gl.glClearColor(0, 0, 1, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-//        fpsLogger.log();
-
         // Draw Hexagonal Grid
         for (Hexagon<HexagonData> hexagon : hexagonalGrid.getHexagons()) {
             ScreenUtils.drawEmptyHexagon(shapeRenderer, hexagon);
@@ -115,6 +116,10 @@ public class GameScreen implements Screen{
             if(SHOW_SELECTION_CIRCLE){
                 ScreenUtils.drawCircle(shapeRenderer, (float)hexagon.getCenterX(), (float)hexagon.getCenterY(), gameController.getSelectionRadius(), Color.FOREST);
             }
+
+            batch.begin();
+            font.draw(batch, hexagon.getId(), (int)(hexagon.getCenterX() - font.getXHeight()/2), (int)(hexagon.getCenterY() - font.getCapHeight()/2) - 10);
+            batch.end();
 
             hexagon.getSatelliteData().ifPresent(data ->{
                 if(data.isFixed()){
@@ -178,6 +183,8 @@ public class GameScreen implements Screen{
 
         private final int screenWidth = Gdx.graphics.getWidth();
         private final int screenHeight = Gdx.graphics.getHeight();
+
+        private boolean isNextLevelLaunched = false;
 
         GameController(){
 //            System.out.println(selectionRadius);
@@ -459,7 +466,7 @@ public class GameScreen implements Screen{
             return true;
         }
         private void checkWinCondition(){
-            // Check for win condition
+            // Check for win condition (all fixed hexagons are satisfied)
             if(checkGameState()){
                 // Find the hovered hexagon
                 Hexagon<HexagonData> hex = ScreenUtils.getHoveredHex(hexagonalGrid, gameX, gameY);
@@ -468,10 +475,27 @@ public class GameScreen implements Screen{
                     for(Hexagon<HexagonData> hexagon: hexagonalGrid.getNeighborsOf(hex)){
                         if(hexagon.getId().equals(firstHexID.getId())) {
                             isWon = true;
+                            if(!isNextLevelLaunched){
+                                isNextLevelLaunched = true;
+                                launchNextLevel();
+                            }
                         }
                     }
                 }
             }
+        }
+        private void launchNextLevel(){
+            timer.scheduleTask(new Timer.Task(){
+                @Override
+                public void run() {
+                    levelController.levelFinished();
+                    hexagonalGrid = levelController.getCurrentLevel().getHexagonalGrid();
+                    gridCalculator = levelController.getCurrentLevel().getGridCalculator();
+                    resetBoard();
+                    isWon = false;
+                    isNextLevelLaunched = false;
+                }
+            }, 1);
         }
         private void updateMousePos(int screenX, int screenY){
             gameX = screenX - (int)((screenWidth - gridWidth)/2);
@@ -511,6 +535,10 @@ public class GameScreen implements Screen{
             updateFixedHexagons();
             checkWinCondition();
             }
+        private void resetBoard(){
+            updatePossibleMovesInitialState();
+            selectedHexagons.clear();
+        }
 
     }
 
