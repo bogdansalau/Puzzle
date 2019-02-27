@@ -40,7 +40,9 @@ public class GameScreen implements Screen{
     private ShapeRenderer shapeRenderer = new ShapeRenderer();
     private BitmapFont font = new BitmapFont();
     private SpriteBatch batch = new SpriteBatch();
-    FPSLogger fpsLogger = new FPSLogger();
+    private FPSLogger fpsLogger = new FPSLogger();
+    private OrthographicCamera camera;
+    private Matrix4 centerTranslationMatrix;
 
     // Game logic
     private ArrayList<Hexagon<HexagonData>> selectedHexagons = new ArrayList<>();
@@ -61,7 +63,8 @@ public class GameScreen implements Screen{
 
     @Override
     public void show() {
-        OrthographicCamera camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+        camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.setToOrtho(true, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         // Create a new game controller and get the grid of the current level
@@ -76,7 +79,17 @@ public class GameScreen implements Screen{
 
 
 
-        Matrix4 centerTranslationMatrix = new Matrix4().translate((Gdx.graphics.getWidth() - gameController.getGridWidth())/2,
+        updateCamera();
+
+
+        font = new BitmapFont(Gdx.files.internal("font.fnt"), Gdx.files.internal("font.png"), false);
+        font = new BitmapFont(true);
+
+        font.setColor(Color.RED);
+    }
+
+    private void updateCamera(){
+        centerTranslationMatrix = new Matrix4().translate((Gdx.graphics.getWidth() - gameController.getGridWidth())/2,
                 (Gdx.graphics.getHeight() - gameController.getGridHeight())/2, 0);
 
         shapeRenderer.setProjectionMatrix(camera.combined);
@@ -84,12 +97,6 @@ public class GameScreen implements Screen{
         shapeRenderer.updateMatrices();
         batch.setProjectionMatrix(camera.combined);
         batch.setTransformMatrix(centerTranslationMatrix);
-
-
-        font = new BitmapFont(Gdx.files.internal("font.fnt"), Gdx.files.internal("font.png"), false);
-        font = new BitmapFont(true);
-
-        font.setColor(Color.RED);
     }
 
     @Override
@@ -117,9 +124,9 @@ public class GameScreen implements Screen{
                 ScreenUtils.drawCircle(shapeRenderer, (float)hexagon.getCenterX(), (float)hexagon.getCenterY(), gameController.getSelectionRadius(), Color.FOREST);
             }
 
-            batch.begin();
-            font.draw(batch, hexagon.getId(), (int)(hexagon.getCenterX() - font.getXHeight()/2), (int)(hexagon.getCenterY() - font.getCapHeight()/2) - 10);
-            batch.end();
+//            batch.begin();
+//            font.draw(batch, hexagon.getId(), (int)(hexagon.getCenterX() - font.getXHeight()/2), (int)(hexagon.getCenterY() - font.getCapHeight()/2) - 10);
+//            batch.end();
 
             hexagon.getSatelliteData().ifPresent(data ->{
                 if(data.isFixed()){
@@ -491,7 +498,8 @@ public class GameScreen implements Screen{
                     levelController.levelFinished();
                     hexagonalGrid = levelController.getCurrentLevel().getHexagonalGrid();
                     gridCalculator = levelController.getCurrentLevel().getGridCalculator();
-                    resetBoard();
+                    initHexagonArrays();
+                    updateCamera();
                     isWon = false;
                     isNextLevelLaunched = false;
                 }
@@ -535,11 +543,6 @@ public class GameScreen implements Screen{
             updateFixedHexagons();
             checkWinCondition();
             }
-        private void resetBoard(){
-            updatePossibleMovesInitialState();
-            selectedHexagons.clear();
-        }
-
     }
 
     @Override
