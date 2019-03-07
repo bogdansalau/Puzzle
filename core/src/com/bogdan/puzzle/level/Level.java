@@ -13,7 +13,11 @@ public class Level {
     private HexagonalGridCalculator gridCalculator;
     private ArrayList<Hexagon<HexagonData>> fixedHexagons;
 
-    Level(int width, int height, int radius, HexagonOrientation orientation, HexagonalGridLayout layout, ArrayList<LevelReader.FixedHex> fixedHexes){
+    Level(int width, int height, int radius,
+          HexagonOrientation orientation,
+          HexagonalGridLayout layout,
+          ArrayList<LevelReader.FixedHex> fixedHexes,
+          ArrayList<LevelReader.HiddenHex> hiddenHexes){
 
         HexagonalGridBuilder<HexagonData> builder = new HexagonalGridBuilder<HexagonData>()
                 .setGridWidth(width)
@@ -28,6 +32,7 @@ public class Level {
         fixedHexagons = new ArrayList<>();
         for(Hexagon<HexagonData> hexagon: hexagonalGrid.getHexagons()){
             boolean isFixed = false;
+            boolean isVisible = false;
 
             // Compare each hexagon from the hexagonal grid with the fixed hexagons from the file
             for(LevelReader.FixedHex fixedHex : fixedHexes){

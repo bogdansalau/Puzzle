@@ -30,7 +30,8 @@ public class LevelController {
                 levelReader.getRadius(),
                 levelReader.getOrientation(),
                 levelReader.getLayout(),
-                levelReader.getFixedHexes());
+                levelReader.getFixedHexes(),
+                levelReader.getHiddenHexes());
     }
 
     private void updatePreferences(){
@@ -55,7 +56,8 @@ public class LevelController {
                 levelReader.getRadius(),
                 levelReader.getOrientation(),
                 levelReader.getLayout(),
-                levelReader.getFixedHexes());
+                levelReader.getFixedHexes(),
+                levelReader.getHiddenHexes());
     }
 
     public Level getCurrentLevel() {

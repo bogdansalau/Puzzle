@@ -15,6 +15,7 @@ class LevelReader {
     private HexagonOrientation orientation;
     private HexagonalGridLayout layout;
     private ArrayList<FixedHex> fixedHexes;
+    private ArrayList<HiddenHex> hiddenHexes;
 
     LevelReader(){
 
@@ -33,58 +34,57 @@ class LevelReader {
 
             // Split the description in lines
             String[] linesArray = levelDescriptionStr.split("\n");
-            int lineNr = 0;
+
+            String lineIdentifier;
             for(String line : linesArray) {
-//                System.out.println(line);
                 if(line.charAt(0) != '%'){
-                    switch (lineNr){
-                        case 0:
-                            String[] widthAndHeight = line.split(" ");
-                            //System.out.println(widthAndHeight[0] + " " + widthAndHeight[1]+"|");
-                            gridWidth = Integer.parseInt(widthAndHeight[0].trim());
-                            gridHeight = Integer.parseInt(widthAndHeight[1].trim());
-                            lineNr++;
-                            break;
-                        case 1:
-                            try{
-                                radius = Integer.parseInt(line.trim());
-                            } catch (Exception e){
-                                System.out.println(line);
-                            }
-
-                            lineNr++;
-                            break;
-                        case 2:
-                            if(Integer.parseInt(line.trim()) == 1) orientation = HexagonOrientation.FLAT_TOP;
-                            else orientation = HexagonOrientation.POINTY_TOP;
-                            lineNr++;
-                            break;
-                        case 3:
-                            switch (Integer.parseInt(line.trim())){
-                                case 1: layout = HexagonalGridLayout.RECTANGULAR; break;
-                                case 2: layout = HexagonalGridLayout.HEXAGONAL; break;
-                                case 3: layout = HexagonalGridLayout.TRIANGULAR; break;
-                                case 4: layout = HexagonalGridLayout.TRAPEZOID; break;
-                                default: layout = HexagonalGridLayout.TRAPEZOID; break;
-                            }
-
-                            lineNr++;
-                            break;
-                        default:
-                            String[] fixedHexagonData = line.split(" ");
-                            fixedHexes.add(new FixedHex(
-                                    Integer.parseInt(fixedHexagonData[0].trim()),
-                                    Integer.parseInt(fixedHexagonData[1].trim()),
-                                    Integer.parseInt(fixedHexagonData[2].trim())
-                            ));
-                            lineNr++;
-                            break;
-                    }
+                    String[] splitLine = line.split(" ");
+                    lineIdentifier = splitLine[0];
+                    handleInputLine(lineIdentifier, splitLine);
                 }
             }
         } else {
             System.out.println("Level not found!");
         }
+    }
+
+    private void handleInputLine(String identifier, String[] splitLine){
+        switch (identifier){
+            case "dimension":
+                gridWidth = Integer.parseInt(splitLine[1].trim());
+                gridHeight = Integer.parseInt(splitLine[2].trim());
+                break;
+            case "radius":
+                radius = Integer.parseInt(splitLine[1].trim());
+                break;
+            case "orientation":
+                if(Integer.parseInt(splitLine[1].trim()) == 1) orientation = HexagonOrientation.FLAT_TOP;
+                else orientation = HexagonOrientation.POINTY_TOP;
+                break;
+            case "layout":
+                switch (Integer.parseInt(splitLine[1].trim())){
+                    case 1: layout = HexagonalGridLayout.RECTANGULAR; break;
+                    case 2: layout = HexagonalGridLayout.HEXAGONAL; break;
+                    case 3: layout = HexagonalGridLayout.TRIANGULAR; break;
+                    case 4: layout = HexagonalGridLayout.TRAPEZOID; break;
+                    default: layout = HexagonalGridLayout.TRAPEZOID; break;
+                }
+                break;
+            case "fixed":
+                fixedHexes.add(new FixedHex(
+                        Integer.parseInt(splitLine[1].trim()),
+                        Integer.parseInt(splitLine[2].trim()),
+                        Integer.parseInt(splitLine[3].trim())
+                ));
+                break;
+            case "hidden":
+                hiddenHexes.add(new HiddenHex(
+                        Integer.parseInt(splitLine[1].trim()),
+                        Integer.parseInt(splitLine[2].trim()),
+                        Integer.parseInt(splitLine[3].trim())
+                ));
+        }
+
     }
 
     class FixedHex{
@@ -95,6 +95,34 @@ class LevelReader {
         private int value;
 
         FixedHex(int idX, int idY, int value){
+            this.idX = idX;
+            this.idY = idY;
+            this.value = value;
+            id = idX+","+idY;
+        }
+
+        public String getId() {
+            return id;
+        }
+        public int getIdX() {
+            return idX;
+        }
+        public int getIdY() {
+            return idY;
+        }
+        public int getValue() {
+            return value;
+        }
+    }
+
+    class HiddenHex{
+
+        private String id;
+        private int idX;
+        private int idY;
+        private int value;
+
+        HiddenHex(int idX, int idY, int value){
             this.idX = idX;
             this.idY = idY;
             this.value = value;
@@ -132,5 +160,8 @@ class LevelReader {
     }
     public ArrayList<FixedHex> getFixedHexes() {
         return fixedHexes;
+    }
+    public ArrayList<HiddenHex> getHiddenHexes() {
+        return hiddenHexes;
     }
 }

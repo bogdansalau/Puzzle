@@ -79,7 +79,7 @@ public class GameScreen implements Screen{
 
 
 
-        updateCamera();
+        centerCamera();
 
 
         font = new BitmapFont(Gdx.files.internal("font.fnt"), Gdx.files.internal("font.png"), false);
@@ -88,7 +88,7 @@ public class GameScreen implements Screen{
         font.setColor(Color.RED);
     }
 
-    private void updateCamera(){
+    private void centerCamera(){
         centerTranslationMatrix = new Matrix4().translate((Gdx.graphics.getWidth() - gameController.getGridWidth())/2,
                 (Gdx.graphics.getHeight() - gameController.getGridHeight())/2, 0);
 
@@ -499,7 +499,7 @@ public class GameScreen implements Screen{
                     hexagonalGrid = levelController.getCurrentLevel().getHexagonalGrid();
                     gridCalculator = levelController.getCurrentLevel().getGridCalculator();
                     initHexagonArrays();
-                    updateCamera();
+                    centerCamera();
                     isWon = false;
                     isNextLevelLaunched = false;
                 }

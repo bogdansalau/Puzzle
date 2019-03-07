@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Color;
 public class HexagonDataBuilder {
     private boolean isSelected = false;
     private boolean isFixed = false;
+    private boolean isVisible = true;
     private int value = 0;
     private int nrSelectedNeighbours = 0;
 
@@ -27,6 +28,11 @@ public class HexagonDataBuilder {
         return this;
     }
 
+    public HexagonDataBuilder setVisible(boolean visible){
+        isVisible = visible;
+        return this;
+    }
+
     public HexagonDataBuilder setValue(int value) {
         this.value = value;
         return this;
@@ -38,7 +44,7 @@ public class HexagonDataBuilder {
     }
 
     public HexagonData build(){
-        return new HexagonData(isSelected, isFixed, value, nrSelectedNeighbours);
+        return new HexagonData(isSelected, isFixed, isVisible, value, nrSelectedNeighbours);
     }
 
 }
