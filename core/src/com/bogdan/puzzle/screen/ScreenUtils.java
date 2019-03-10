@@ -1,7 +1,9 @@
 package com.bogdan.puzzle.screen;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
 import com.bogdan.puzzle.hexagon.HexagonData;
 import org.hexworks.mixite.core.api.Hexagon;
 import org.hexworks.mixite.core.api.HexagonalGrid;
@@ -24,6 +26,15 @@ class ScreenUtils {
         shapeRenderer.setColor(color);
         shapeRenderer.circle(x, y, radius);
         shapeRenderer.end();
+    }
+
+    static void drawLine(ShapeRenderer shapeRenderer, Vector2 start, Vector2 end, int lineWidth, Color color) {
+        Gdx.gl.glLineWidth(lineWidth);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(color);
+        shapeRenderer.line(start, end);
+        shapeRenderer.end();
+        Gdx.gl.glLineWidth(1);
     }
 
     static void drawRectangle(ShapeRenderer shapeRenderer,float x, float y, float width, float height,Color color){

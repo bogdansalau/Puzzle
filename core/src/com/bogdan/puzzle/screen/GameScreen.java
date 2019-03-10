@@ -12,10 +12,10 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Timer;
 import com.bogdan.puzzle.Puzzle;
 import com.bogdan.puzzle.hexagon.HexagonData;
-import com.bogdan.puzzle.hexagon.HexagonDataBuilder;
 import com.bogdan.puzzle.level.LevelController;
 import org.hexworks.mixite.core.api.Hexagon;
 import org.hexworks.mixite.core.api.HexagonalGrid;
@@ -24,9 +24,9 @@ import org.hexworks.mixite.core.api.Rectangle;
 import org.hexworks.mixite.core.vendor.Maybe;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 public class GameScreen implements Screen{
@@ -43,7 +43,6 @@ public class GameScreen implements Screen{
     private SpriteBatch batch = new SpriteBatch();
     private FPSLogger fpsLogger = new FPSLogger();
     private OrthographicCamera camera;
-    private Matrix4 centerTranslationMatrix;
 
     // Game logic
     private ArrayList<Hexagon<HexagonData>> selectedHexagons = new ArrayList<>();
@@ -87,8 +86,8 @@ public class GameScreen implements Screen{
     }
 
     private void centerCamera(){
-        centerTranslationMatrix = new Matrix4().translate((Gdx.graphics.getWidth() - gameController.getGridWidth())/2,
-                (Gdx.graphics.getHeight() - gameController.getGridHeight())/2, 0);
+        Matrix4 centerTranslationMatrix = new Matrix4().translate((Gdx.graphics.getWidth() - gameController.getGridWidth()) / 2,
+                (Gdx.graphics.getHeight() - gameController.getGridHeight()) / 2, 0);
 
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.setTransformMatrix(centerTranslationMatrix);
@@ -151,30 +150,53 @@ public class GameScreen implements Screen{
         }
 
 
-        // Draw the hexagons that can be selected next
+        // Draw a circle at the center of hexagons that can be selected next
         for (Hexagon<HexagonData> hexagon : nextPossibleSelection) {
             ScreenUtils.drawCircle(shapeRenderer, (float) hexagon.getCenterX(), (float) hexagon.getCenterY(), 10, Color.CHARTREUSE);
         }
 
         // Draw the hexagons that were already selected
-        for (Hexagon<HexagonData> hexagon : selectedHexagons) {
-            if(gameController.getLastHexID().getId().equals(hexagon.getId())){
-                ScreenUtils.drawCircle(shapeRenderer, (float) hexagon.getCenterX(), (float) hexagon.getCenterY(), 10, Color.GOLD);
-            } else if(gameController.getBeforeLastHexID().getId().equals(hexagon.getId())) {
-                ScreenUtils.drawCircle(shapeRenderer, (float) hexagon.getCenterX(), (float) hexagon.getCenterY(), 10, Color.GOLDENROD);
-            } else {
-                ScreenUtils.drawCircle(shapeRenderer, (float) hexagon.getCenterX(), (float) hexagon.getCenterY(), 10, Color.BLACK);
+        Iterator<Hexagon<HexagonData>> selectedHexagonsIterator = selectedHexagons.iterator();
+        Hexagon<HexagonData> prevHexagon = null;
+        while(selectedHexagonsIterator.hasNext()) {
+            Hexagon<HexagonData> currHexagon = selectedHexagonsIterator.next();
+            if(prevHexagon!= null){
+                ScreenUtils.drawLine(shapeRenderer,
+                        new Vector2((float) prevHexagon.getCenterX(), (float) prevHexagon.getCenterY()),
+                        new Vector2((float) currHexagon.getCenterX(), (float) currHexagon .getCenterY()),
+                        3,
+                        Color.BLACK);
             }
+            if(gameController.getLastHexID().getId().equals(currHexagon.getId())){
+                ScreenUtils.drawCircle(shapeRenderer,
+                        (float) currHexagon.getCenterX(),
+                        (float) currHexagon.getCenterY(),
+                        3, Color.GOLD);
+            } else if(gameController.getBeforeLastHexID().getId().equals(currHexagon.getId())) {
+                ScreenUtils.drawCircle(shapeRenderer,
+                        (float) currHexagon.getCenterX(),
+                        (float) currHexagon.getCenterY(),
+                        3, Color.GOLDENROD);
+            } else {
+                ScreenUtils.drawCircle(shapeRenderer,
+                        (float) currHexagon.getCenterX(),
+                        (float) currHexagon.getCenterY(),
+                        3, Color.BLACK);
+            }
+            prevHexagon = currHexagon;
         }
 
         if(isWon){
+            ScreenUtils.drawLine(shapeRenderer,
+                    new Vector2((float) gameController.firstHexID.getCenterX(), (float) gameController.firstHexID.getCenterY()),
+                    new Vector2((float) gameController.lastHexID.getCenterX(), (float) gameController.lastHexID.getCenterY()),
+                    3,
+                    Color.BLACK);
             CharSequence str = "You won!";
             batch.begin();
             font.draw(batch, str, 20, 20);
             batch.end();
         }
-
-        //ScreenUtils.drawCircle(shapeRenderer, mouseX, mouseY, 2, Color.BLACK);
     }
 
     private class GameController implements InputProcessor{
@@ -186,7 +208,7 @@ public class GameScreen implements Screen{
         private boolean createMode = true;
 
         // Hexagon will be selected on touchDown only if the input is in within the circle with center at the hex center and radius selectionRadius
-        private int selectionRadius = (int) (hexagonalGrid.getGridData().getRadius()*(2.0/3.0));
+        private int selectionRadius = (int) (hexagonalGrid.getGridData().getRadius()*(5.0/6.0));
 
         // Game coordinates
         private int gameX;
@@ -418,6 +440,9 @@ public class GameScreen implements Screen{
 
             // Filter out impossible moves
             neighbours.removeAll(hexagonalGrid.getNeighborsOf(selectedHexagons.get(selectedHexagons.size() - 2)));
+
+            // Remove the last selected hexagon as well
+            neighbours.remove((selectedHexagons.get(selectedHexagons.size() - 2)));
 
             // Filter out non-null hexagons
             for (Hexagon<HexagonData> h : neighbours) {
