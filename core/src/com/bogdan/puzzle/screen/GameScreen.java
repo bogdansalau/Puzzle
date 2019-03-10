@@ -177,6 +177,8 @@ public class GameScreen implements Screen{
         private Hexagon<HexagonData> beforeLastHexID = null;
         private Hexagon<HexagonData> lastHexID = null;
 
+        private boolean createMode = true;
+
         // Hexagon will be selected on touchDown only if the input is in within the circle with center at the hex center and radius selectionRadius
         private int selectionRadius = (int) (hexagonalGrid.getGridData().getRadius()*(2.0/3.0));
 
@@ -248,6 +250,7 @@ public class GameScreen implements Screen{
         }
         @Override
         public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+            createMode = true;
             return false;
         }
         @Override
@@ -264,6 +267,7 @@ public class GameScreen implements Screen{
                 if (isInsideSelectionCircle(hex)) {
                     // If a selected hexagon is clicked, backtrack the path to the respective step
                     if(selectedHexagons.contains(hex)){
+                        createMode = false;
                         backtrackPath(hex);
                     } else {
                         handleInput(hex);
@@ -279,7 +283,7 @@ public class GameScreen implements Screen{
             updateMousePos(screenX, screenY);
             // Find the hovered hexagon
             Hexagon<HexagonData> hex = ScreenUtils.getHoveredHex(hexagonalGrid, gameX, gameY);
-            if(hex != null) {
+            if(hex != null && createMode) {
                 if (isInsideSelectionCircle(hex)) {
                     handleInput(hex);
                     updateFixedHexagons();
