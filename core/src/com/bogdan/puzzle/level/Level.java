@@ -30,23 +30,40 @@ public class Level {
 
         // Set SatelliteData for each hex
         fixedHexagons = new ArrayList<>();
+
         for(Hexagon<HexagonData> hexagon: hexagonalGrid.getHexagons()){
             boolean isFixed = false;
-            boolean isVisible = false;
+            boolean isVisible = true;
 
             // Compare each hexagon from the hexagonal grid with the fixed hexagons from the file
             for(LevelReader.FixedHex fixedHex : fixedHexes){
-
-                // If the hexagon is fixed, update satellite data accordingly
+                  // If the hexagon is fixed, update satellite data accordingly
                 if(hexagon.getId().equals(fixedHex.getId())){
-                    hexagon.setSatelliteData(new HexagonDataBuilder().setValue(fixedHex.getValue()).setFixed(true).build());
+                    hexagon.setSatelliteData(new HexagonDataBuilder()
+                            .setValue(fixedHex.getValue())
+                            .setFixed(true)
+                            .setVisible(false)
+                            .build());
                     isFixed = true;
                     fixedHexagons.add(hexagon);
                 }
             }
 
+            // Only check if it is hidden if it is not fixed
+            if(!isFixed && !hiddenHexes.isEmpty()){
+                // Compare each hexagon from the hexagonal grid with the hidden hexagons from the file
+                for(LevelReader.HiddenHex hiddenHex : hiddenHexes){
+                    // If the hexagon is hidden, update satellite data accordingly
+                    if(hexagon.getId().equals(hiddenHex.getId())){
+                        hexagon.setSatelliteData(new HexagonDataBuilder()
+                                .setVisible(false)
+                                .build());
+                        isVisible = false;
+                    }
+                }
+            }
             // If the hexagon is not fixed, update with default satellite data
-            if(!isFixed){
+            if(!isFixed && isVisible){
                 hexagon.setSatelliteData(new HexagonDataBuilder().build());
             }
         }

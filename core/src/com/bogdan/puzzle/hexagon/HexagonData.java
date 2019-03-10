@@ -10,9 +10,9 @@ public class HexagonData extends DefaultSatelliteData {
     private int nrSelectedNeighbours;
 
     // Constants
-    private boolean isFixed;
-    private boolean isVisible;
-    private int value;
+    private final boolean isFixed;
+    private final boolean isVisible;
+    private final int value;
 
 
     HexagonData(boolean isSelected, boolean isFixed, boolean isVisible, int value, int nrSelectedNeighbours){
@@ -38,5 +38,12 @@ public class HexagonData extends DefaultSatelliteData {
     }
     public int getNrSelectedNeighbours(){
         return nrSelectedNeighbours;
+    }
+
+    public void setSelected(boolean selected) {
+        isSelected = selected;
+    }
+    public void setNrSelectedNeighbours(int nrSelectedNeighbours) {
+        this.nrSelectedNeighbours = nrSelectedNeighbours;
     }
 }

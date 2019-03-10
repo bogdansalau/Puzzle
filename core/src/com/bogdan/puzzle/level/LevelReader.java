@@ -24,6 +24,7 @@ class LevelReader {
     void loadLevel(int levelId){
 
         fixedHexes = new ArrayList<>();
+        hiddenHexes = new ArrayList<>();
 
         if(Gdx.files.internal("levels/level_" + levelId + ".txt").exists()){
             // Open level with the ID = levelId
@@ -80,8 +81,7 @@ class LevelReader {
             case "hidden":
                 hiddenHexes.add(new HiddenHex(
                         Integer.parseInt(splitLine[1].trim()),
-                        Integer.parseInt(splitLine[2].trim()),
-                        Integer.parseInt(splitLine[3].trim())
+                        Integer.parseInt(splitLine[2].trim())
                 ));
         }
 
@@ -120,12 +120,10 @@ class LevelReader {
         private String id;
         private int idX;
         private int idY;
-        private int value;
 
-        HiddenHex(int idX, int idY, int value){
+        HiddenHex(int idX, int idY){
             this.idX = idX;
             this.idY = idY;
-            this.value = value;
             id = idX+","+idY;
         }
 
@@ -137,9 +135,6 @@ class LevelReader {
         }
         public int getIdY() {
             return idY;
-        }
-        public int getValue() {
-            return value;
         }
     }
 

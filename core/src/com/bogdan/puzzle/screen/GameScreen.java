@@ -21,6 +21,7 @@ import org.hexworks.mixite.core.api.Hexagon;
 import org.hexworks.mixite.core.api.HexagonalGrid;
 import org.hexworks.mixite.core.api.HexagonalGridCalculator;
 import org.hexworks.mixite.core.api.Rectangle;
+import org.hexworks.mixite.core.vendor.Maybe;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Array;
@@ -70,17 +71,14 @@ public class GameScreen implements Screen{
         // Create a new game controller and get the grid of the current level
         // The Level controller, on construction, sets the current level to the one mentioned in the preferences
         levelController = new LevelController();
-        hexagonalGrid = levelController.getCurrentLevel().getHexagonalGrid();
-        gridCalculator = levelController.getCurrentLevel().getGridCalculator();
+        hexagonalGrid = levelController.getCurrentLevelHexagonalGrid();
+        gridCalculator = levelController.getCurrentLevelHexagonalCalculator();
 
         // Create a new game controller to solve the game logic and the input
         gameController = new GameController();
         Gdx.input.setInputProcessor(gameController);
 
-
-
         centerCamera();
-
 
         font = new BitmapFont(Gdx.files.internal("font.fnt"), Gdx.files.internal("font.png"), false);
         font = new BitmapFont(true);
@@ -107,7 +105,28 @@ public class GameScreen implements Screen{
 
         // Draw Hexagonal Grid
         for (Hexagon<HexagonData> hexagon : hexagonalGrid.getHexagons()) {
-            ScreenUtils.drawEmptyHexagon(shapeRenderer, hexagon);
+
+            // Draw hexagons from the hexagon grid
+            Maybe<HexagonData> currHexDataMaybe = hexagon.getSatelliteData();
+            if(currHexDataMaybe.isPresent()){
+                HexagonData currHexData = currHexDataMaybe.get();
+
+                // Draw the hexagon only if it is visible
+                if(currHexData.isVisible()){
+                    ScreenUtils.drawEmptyHexagon(shapeRenderer, hexagon);
+                }
+                if(currHexData.isFixed()){
+                    CharSequence neighboursLeftToVisit = currHexData.getValue() - currHexData.getNrSelectedNeighbours() + "";
+                    batch.begin();
+                    font.draw(batch,
+                            neighboursLeftToVisit,
+                            (int)(hexagon.getCenterX() - font.getXHeight()/2),
+                            (int)(hexagon.getCenterY() - font.getCapHeight()/2));
+                    batch.end();
+                }
+            }
+
+
             if(SHOW_EXTERNAL_BOUNDING_BOX){
                 Rectangle rect = hexagon.getExternalBoundingBox();
                 ScreenUtils.drawCircle(shapeRenderer, (float)rect.getX(), (float)rect.getY(), 3, Color.SCARLET);
@@ -123,19 +142,6 @@ public class GameScreen implements Screen{
             if(SHOW_SELECTION_CIRCLE){
                 ScreenUtils.drawCircle(shapeRenderer, (float)hexagon.getCenterX(), (float)hexagon.getCenterY(), gameController.getSelectionRadius(), Color.FOREST);
             }
-
-//            batch.begin();
-//            font.draw(batch, hexagon.getId(), (int)(hexagon.getCenterX() - font.getXHeight()/2), (int)(hexagon.getCenterY() - font.getCapHeight()/2) - 10);
-//            batch.end();
-
-            hexagon.getSatelliteData().ifPresent(data ->{
-                if(data.isFixed()){
-                    CharSequence str = data.getValue() - data.getNrSelectedNeighbours() + "";
-                    batch.begin();
-                    font.draw(batch, str, (int)(hexagon.getCenterX() - font.getXHeight()/2), (int)(hexagon.getCenterY() - font.getCapHeight()/2));
-                    batch.end();
-                }
-            });
         }
 
         if(SHOW_GRID_BOUNDING_BOX){
@@ -195,8 +201,10 @@ public class GameScreen implements Screen{
 
         private boolean isNextLevelLaunched = false;
 
+        private ArrayList<Hexagon<HexagonData>> currentLevelFixedHexagons;
+
         GameController(){
-//            System.out.println(selectionRadius);
+            currentLevelFixedHexagons = levelController.getCurrentLevelFixedHexagons();
             initHexagonArrays();
         }
         /**
@@ -218,7 +226,7 @@ public class GameScreen implements Screen{
             for (Hexagon<HexagonData> hexagon : hexagonalGrid.getHexagons()) {
                 // Collect in an array all the non-fixed hexagons
                 hexagon.getSatelliteData().ifPresent(data -> {
-                    if(!data.isFixed()){
+                    if(isAvailable(data)){
                         nextPossibleSelection.add(hexagon);
                     }
                 });
@@ -302,9 +310,14 @@ public class GameScreen implements Screen{
                 // Change nr of neighbours of fixed ones
                 for (Hexagon<HexagonData> hexagon : hexagonalGrid.getHexagons()) {
                     HexagonData data = hexagon.getSatelliteData().get();
-                    hexagon.setSatelliteData(new HexagonDataBuilder(data).setSelected(false).build());
-                    if(data.isFixed()){
-                        hexagon.setSatelliteData(new HexagonDataBuilder(data).setNrSelectedNeighbours(0).build());
+                    // Init fixed hexes
+                    if(data.isFixed() ){
+                        data.setNrSelectedNeighbours(0);
+                    } else if(!data.isVisible()){
+                        data.setSelected(false);
+                    } else {
+                        data.setSelected(false);
+                        data.setNrSelectedNeighbours(0);
                     }
                 }
                 lastHexID = null;
@@ -325,7 +338,7 @@ public class GameScreen implements Screen{
          */
         private void handleInput(Hexagon<HexagonData> hexagon){
 
-            if(hexagon != null && !hexagon.getSatelliteData().get().isFixed()) {
+            if(hexagon != null && isAvailable(hexagon.getSatelliteData().get())) {
                 if(isInsideSelectionCircle(hexagon)){
                     // Case in which the selected hex is first in the row
                     if (selectedHexagons.size() == 0) {
@@ -349,7 +362,7 @@ public class GameScreen implements Screen{
             // Only proceed if the hexagon can be found in the next possible selection array
             if(nextPossibleSelection.contains(hexagon)){
                 // Set the clicked hexagon isSelected property as "true"
-                hexagon.setSatelliteData(new HexagonDataBuilder().setSelected(true).build());
+                hexagon.getSatelliteData().get().setSelected(true);
 
                 // Update firstHexID and lastHexID to keep the both ends of the path
                 firstHexID = hexagon;
@@ -367,7 +380,7 @@ public class GameScreen implements Screen{
             // Only proceed if the hexagon can be found in the next possible selection array
             if(nextPossibleSelection.contains(hex)){
                 // Set the clicked hexagon isSelected property as "true"
-                hex.setSatelliteData(new HexagonDataBuilder().setSelected(true).build());
+                hex.getSatelliteData().get().setSelected(true);
 
                 // Update lastHexID and beforeLastHexID to keep the head of the path and the hexagon before the head
                 updateHexIDs(hex);
@@ -382,7 +395,7 @@ public class GameScreen implements Screen{
             // Only proceed if the hexagon can be found in the next possible selection array
             if(nextPossibleSelection.contains(hex) && !selectedHexagons.contains(hex)){
                 // Set the clicked hexagon isSelected property as "true"
-                hex.setSatelliteData(new HexagonDataBuilder().setSelected(true).build());
+                hex.getSatelliteData().get().setSelected(true);
 
                 // Update lastHexID and beforeLastHexID to keep the head of the path and the hexagon before the head
                 updateHexIDs(hex);
@@ -409,7 +422,7 @@ public class GameScreen implements Screen{
             // Filter out non-null hexagons
             for (Hexagon<HexagonData> h : neighbours) {
                 h.getSatelliteData().ifPresent(hexData -> {
-                    if (hexData.getValue() == 0) {
+                    if (isAvailable(hexData)) {
                         nextPossibleSelection.add(h);
                     }
                 });
@@ -421,7 +434,7 @@ public class GameScreen implements Screen{
             Collection<Hexagon<HexagonData>> neighbours = hexagonalGrid.getNeighborsOf(hexagon);
             for (Hexagon<HexagonData> h : neighbours) {
                 h.getSatelliteData().ifPresent(hexData -> {
-                    if (!hexData.isFixed()) {
+                    if (isAvailable(hexData)) {
                         nextPossibleSelection.add(h);
                     }
                 });
@@ -431,8 +444,8 @@ public class GameScreen implements Screen{
             nextPossibleSelection.clear();
             for (Hexagon<HexagonData> hexagon : hexagonalGrid.getHexagons()) {
                 // Collect in an array all the non-fixed hexagons
-                hexagon.getSatelliteData().ifPresent(data -> {
-                    if (!data.isFixed()) {
+                hexagon.getSatelliteData().ifPresent(hexData -> {
+                    if (isAvailable(hexData)) {
                         nextPossibleSelection.add(hexagon);
                     }
                 });
@@ -457,12 +470,12 @@ public class GameScreen implements Screen{
          * Counts the selected neighbours of each fixed hexagon and updates the hexagon internal count
          */
         private void updateFixedHexagons(){
-            for(Hexagon<HexagonData> hex: levelController.getCurrentLevel().getFixedHexagons()){
+            for(Hexagon<HexagonData> hex: currentLevelFixedHexagons){
                 int nrSelected = 0;
                 for(Hexagon<HexagonData> nHex: hexagonalGrid.getNeighborsOf(hex)){
                     if(nHex.getSatelliteData().get().isSelected()) nrSelected++;
                 }
-                hex.setSatelliteData(new HexagonDataBuilder(hex.getSatelliteData().get()).setNrSelectedNeighbours(nrSelected).build());
+                hex.getSatelliteData().get().setNrSelectedNeighbours(nrSelected);
             }
         }
         /**
@@ -470,7 +483,7 @@ public class GameScreen implements Screen{
          * @return true if all the fixed hexagons are satisfied
          */
         private boolean checkGameState(){
-            for(Hexagon<HexagonData> hex: levelController.getCurrentLevel().getFixedHexagons()){
+            for(Hexagon<HexagonData> hex: currentLevelFixedHexagons){
                 HexagonData data = hex.getSatelliteData().get();
                 if(data.getValue() != data.getNrSelectedNeighbours()) return false;
             }
@@ -500,8 +513,9 @@ public class GameScreen implements Screen{
                 @Override
                 public void run() {
                     levelController.levelFinished();
-                    hexagonalGrid = levelController.getCurrentLevel().getHexagonalGrid();
-                    gridCalculator = levelController.getCurrentLevel().getGridCalculator();
+                    hexagonalGrid = levelController.getCurrentLevelHexagonalGrid();
+                    gridCalculator = levelController.getCurrentLevelHexagonalCalculator();
+                    currentLevelFixedHexagons = levelController.getCurrentLevelFixedHexagons();
                     initHexagonArrays();
                     centerCamera();
                     isWon = false;
@@ -522,7 +536,7 @@ public class GameScreen implements Screen{
 
             // Mark hexagon internal variable isSelected as false
             for(Hexagon<HexagonData> h: removedHexagons){
-                h.setSatelliteData(new HexagonDataBuilder().setSelected(false).build());
+                h.getSatelliteData().get().setSelected(false);
             }
 
             // Remove the hexagons from the selected hexagons list
@@ -546,7 +560,12 @@ public class GameScreen implements Screen{
             }
             updateFixedHexagons();
             checkWinCondition();
-            }
+        }
+
+        // Verifies if the hexagon can be taken into consideration for the game logic algorithms
+        private boolean isAvailable(HexagonData data){
+            return !data.isFixed() && data.isVisible();
+        }
     }
 
     @Override

@@ -2,6 +2,12 @@ package com.bogdan.puzzle.level;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
+import com.bogdan.puzzle.hexagon.HexagonData;
+import org.hexworks.mixite.core.api.Hexagon;
+import org.hexworks.mixite.core.api.HexagonalGrid;
+import org.hexworks.mixite.core.api.HexagonalGridCalculator;
+
+import java.util.ArrayList;
 
 public class LevelController {
 
@@ -60,7 +66,15 @@ public class LevelController {
                 levelReader.getHiddenHexes());
     }
 
-    public Level getCurrentLevel() {
-        return currentLevel;
+
+
+    public HexagonalGrid<HexagonData> getCurrentLevelHexagonalGrid() {
+        return currentLevel.getHexagonalGrid();
+    }
+    public HexagonalGridCalculator getCurrentLevelHexagonalCalculator() {
+        return currentLevel.getGridCalculator();
+    }
+    public ArrayList<Hexagon<HexagonData>> getCurrentLevelFixedHexagons(){
+        return currentLevel.getFixedHexagons();
     }
 }
