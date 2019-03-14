@@ -290,7 +290,6 @@ public class GameScreen implements Screen{
         @Override
         public boolean touchDown(int screenX, int screenY, int pointer, int button) {
             updateMousePos(screenX, screenY);
-
             // Find the hovered hexagon
             Hexagon<HexagonData> hex = ScreenUtils.getHoveredHex(hexagonalGrid, gameX, gameY);
             if(hex != null) {
