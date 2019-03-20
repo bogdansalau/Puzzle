@@ -2,6 +2,7 @@ package com.bogdan.puzzle.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.bogdan.puzzle.hexagon.HexagonData;
@@ -13,6 +14,13 @@ import org.hexworks.mixite.core.vendor.Maybe;
 import java.util.Collection;
 
 class ScreenUtils {
+
+    static void clearScreen(float red, float green, float blue, float alpha){
+        // Clear Screen
+        Gdx.gl.glClearColor(red, green, blue, alpha);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT | (Gdx.graphics.getBufferFormat().coverageSampling?GL20.GL_COVERAGE_BUFFER_BIT_NV:0));
+
+    }
 
     static void drawEmptyHexagon(ShapeRenderer shapeRenderer, Hexagon<HexagonData> hexagon) {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);

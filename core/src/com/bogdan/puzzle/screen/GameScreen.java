@@ -98,9 +98,8 @@ public class GameScreen implements Screen{
 
     @Override
     public void render(float delta) {
-        // Clear Screen
-        Gdx.gl.glClearColor(0, 0, 1, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        ScreenUtils.clearScreen(0.2f, 0, 0.1f, 1);
+
 
         // Draw Hexagonal Grid
         for (Hexagon<HexagonData> hexagon : hexagonalGrid.getHexagons()) {
@@ -440,8 +439,8 @@ public class GameScreen implements Screen{
             // Filter out impossible moves
             neighbours.removeAll(hexagonalGrid.getNeighborsOf(selectedHexagons.get(selectedHexagons.size() - 2)));
 
-            // Remove the last selected hexagon as well
-            neighbours.remove((selectedHexagons.get(selectedHexagons.size() - 2)));
+            // Remove all the selected hexagons
+            neighbours.removeAll(selectedHexagons);
 
             // Filter out non-null hexagons
             for (Hexagon<HexagonData> h : neighbours) {
