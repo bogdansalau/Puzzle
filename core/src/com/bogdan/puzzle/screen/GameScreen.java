@@ -32,8 +32,8 @@ import java.util.List;
 public class GameScreen implements Screen{
 
     // Settings
-    private static final boolean SHOW_EXTERNAL_BOUNDING_BOX = false;
-    private static final boolean SHOW_INTERNAL_BOUNDING_BOX = false;
+    private static final boolean SHOW_EXTERNAL_BOUNDING_BOX = true;
+    private static final boolean SHOW_INTERNAL_BOUNDING_BOX = true;
     private static final boolean SHOW_SELECTION_CIRCLE = false;
     private static final boolean SHOW_GRID_BOUNDING_BOX = false;
 

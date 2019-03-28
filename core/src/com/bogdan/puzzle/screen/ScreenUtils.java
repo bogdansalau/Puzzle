@@ -3,6 +3,7 @@ package com.bogdan.puzzle.screen;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.bogdan.puzzle.hexagon.HexagonData;
@@ -11,6 +12,7 @@ import org.hexworks.mixite.core.api.HexagonalGrid;
 import org.hexworks.mixite.core.api.Point;
 import org.hexworks.mixite.core.vendor.Maybe;
 
+import java.awt.*;
 import java.util.Collection;
 
 class ScreenUtils {
@@ -22,15 +24,27 @@ class ScreenUtils {
 
     }
 
+    static void drawCenteredHexagon(ShapeRenderer shapeRenderer, Hexagon<HexagonData> hexagon, HexagonalGrid<HexagonData> grid){
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.GOLD);
+        shapeRenderer.polygon(ScreenUtils.convertToPointsArrWithOffset(hexagon,
+                (float)grid.getGridData().getRadius(),
+                (float)-hexagon.getExternalBoundingBox().getHeight()/2));
+//        shapeRenderer.polygon(ScreenUtils.convertToPointsArr(hexagon));
+        shapeRenderer.end();
+    }
+
     static void drawEmptyHexagon(ShapeRenderer shapeRenderer, Hexagon<HexagonData> hexagon) {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(Color.GOLD);
-        shapeRenderer.polygon(ScreenUtils.convertToPointsArr(hexagon));
+        shapeRenderer.polygon(ScreenUtils.convertToPointsArrWithOffset(hexagon, 20,
+                (float)hexagon.getExternalBoundingBox().getHeight()/2));
+//        shapeRenderer.polygon(ScreenUtils.convertToPointsArr(hexagon));
         shapeRenderer.end();
     }
 
     static void drawCircle(ShapeRenderer shapeRenderer, float x, float y, int radius, Color color){
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(color);
         shapeRenderer.circle(x, y, radius);
         shapeRenderer.end();
@@ -59,6 +73,18 @@ class ScreenUtils {
         for (Point point : points) {
             pointsArr[idx] = (float) point.getCoordinateX();
             pointsArr[idx + 1] = (float) point.getCoordinateY();
+            idx += 2;
+        }
+        return pointsArr;
+    }
+
+    private static float[] convertToPointsArrWithOffset(Hexagon<HexagonData> hexagon, float x, float y) {
+        Collection<Point> points = hexagon.getPoints();
+        float[] pointsArr = new float[12];
+        int idx = 0;
+        for (Point point : points) {
+            pointsArr[idx] = (float) point.getCoordinateX() - x;
+            pointsArr[idx + 1] = (float) point.getCoordinateY() - y;
             idx += 2;
         }
         return pointsArr;
