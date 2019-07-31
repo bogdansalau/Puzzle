@@ -4,17 +4,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.bogdan.puzzle.hexagon.HexagonData;
 import com.bogdan.puzzle.hexagon.HexagonDataBuilder;
 import org.hexworks.mixite.core.api.*;
-import org.hexworks.mixite.core.internal.impl.HexagonImpl;
 import org.hexworks.mixite.core.vendor.Maybe;
 
 public class TestScreen implements Screen {
@@ -26,18 +23,22 @@ public class TestScreen implements Screen {
 
     private float angle = 0;
     private float size = 0;
-    private float time = 0.02f;
+    private float time = 1;
 
     private int height;
     private int width;
 
     private float t = 0;
 
-    private float x1 = 100;
-    private float y1 = 100;
+    private float x1 = 0;
+    private float y1 = 0;
 
-    private float x2;
-    private float y2;
+    private float xCenter;
+    private float yCenter;
+
+    // Distance from center of a hex to the upper left corner of the hex(the shape renderer uses that corner as a drawing reference)
+    private double xOffset;
+    private double yOffset;
 
     private boolean pause = true;
     private boolean animate = false;
@@ -50,17 +51,24 @@ public class TestScreen implements Screen {
         InputController inputController = new InputController();
         Gdx.input.setInputProcessor(inputController);
 
-        OrthographicCamera camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        camera.setToOrtho(true, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        height = Gdx.graphics.getHeight();
+        width = Gdx.graphics.getWidth();
+
+        OrthographicCamera camera = new OrthographicCamera(width, height);
+        camera.position.set(width / 2.0f, height / 2.0f, 0);
+        camera.update();
+//        camera.setToOrtho(true, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         grid = new HexagonalGridBuilder<HexagonData>()
-                .setGridWidth(3)
-                .setGridHeight(3)
-                .setRadius(20)
+                .setGridWidth(1)
+                .setGridHeight(1)
+                .setRadius(50)
                 .setOrientation(HexagonOrientation.FLAT_TOP)
                 .setGridLayout(HexagonalGridLayout.HEXAGONAL)
                 .build();
         for (Hexagon<HexagonData> hexagon : grid.getHexagons()){
+            xOffset = hexagon.getCenterX() - hexagon.getExternalBoundingBox().getX();
+            yOffset = hexagon.getCenterY() - hexagon.getExternalBoundingBox().getY();
             hexagon.setSatelliteData(new HexagonDataBuilder()
                     .setFixed(false)
                     .setNrSelectedNeighbours(0)
@@ -68,19 +76,14 @@ public class TestScreen implements Screen {
                     .setVisible(true).build());
         }
 
-
-        height = Gdx.graphics.getHeight();
-        width = Gdx.graphics.getWidth();
-
-        x2 = (float)(width/2.0);
-        y2 = (float)(height/2.0);
-
-
-
+        xCenter = (float)(width/2.0);
+        yCenter = (float)(height/2.0);
 
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.updateMatrices();
-        fixedShapeRenderer.setProjectionMatrix(camera.combined);
+
+
+        shapeRenderer.setProjectionMatrix(camera.combined);
         fixedShapeRenderer.updateMatrices();
     }
 
@@ -89,8 +92,13 @@ public class TestScreen implements Screen {
         ScreenUtils.clearScreen(0,0,0,1);
 
 //        ScreenUtils.drawCircle(fixedShapeRenderer, x1, y1, 3, Color.BLUE);
-//        ScreenUtils.drawCircle(fixedShapeRenderer, x2, y2, 3, Color.BLUE);
+        ScreenUtils.drawCircle(fixedShapeRenderer, xCenter, yCenter, 3, Color.BLUE);
+        Matrix4 translationMatrix = new Matrix4()
+                .translate(100, 100, 0);
+        fixedShapeRenderer.setTransformMatrix(translationMatrix);
+        fixedShapeRenderer.updateMatrices();
 
+//        fixedShapeRenderer.getProjectionMatrix()
 
         if(animate){
             ScreenUtils.drawCircle(shapeRenderer,
@@ -99,29 +107,27 @@ public class TestScreen implements Screen {
                     4,
                     Color.BLUE);
 
-            float x = x2*t + (1-t)*x1;
-            float y = y2*t + (1-t)*y1;
-
+            float x = xCenter*t + (1-t)*x1;
+            float y = yCenter*t + (1-t)*y1;
+            if(t > 1) pause = true;
             if(!pause){
                 angle += 1 * time;
                 size += 0.2 * time;
-                if(t > 1) pause = true;
-                t += 0.0001;
+                t += 0.01 * time;
             }
 
+
+
             Matrix4 rotationMatrix = new Matrix4()
-                    .translate(x, y, 0)
-                    .scale(size, size, 0)
-                    .rotate(new Vector3(0, 0, 1), angle);
+                    .translate(x - (float)xOffset, y + (float)yOffset, 0);
+//                    .scale(size, size, 0);
+//                    .rotate(new Vector3(0, 0, 1), angle);
             shapeRenderer.setTransformMatrix(rotationMatrix);
             shapeRenderer.updateMatrices();
-            ScreenUtils.drawCenteredHexagon(shapeRenderer, animationSubject, grid);
+            ScreenUtils.drawEmptyHexagon(shapeRenderer, animationSubject);
         }
 
-
-
-
-        // Draw Hexagonal Grid
+//         Draw Hexagonal Grid
         for (Hexagon<HexagonData> hexagon : grid.getHexagons()) {
 
             // Draw hexagons from the hexagon grid
@@ -131,7 +137,7 @@ public class TestScreen implements Screen {
 
                 // Draw the hexagon only if it is visible
                 if (currHexData.isVisible()) {
-                    ScreenUtils.drawEmptyHexagon(shapeRenderer, hexagon);
+                    ScreenUtils.drawEmptyHexagon(fixedShapeRenderer, hexagon);
                 }
             }
         }
@@ -146,10 +152,10 @@ public class TestScreen implements Screen {
                     pause = !pause;
                     break;
                 case Input.Keys.UP:
-                    time++;
+                    time += 0.01;
                     break;
                 case Input.Keys.DOWN:
-                    time--;
+                    time -= 0.01;
                     break;
             }
             return false;
@@ -168,12 +174,20 @@ public class TestScreen implements Screen {
         @Override
         public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 
+            // Transform touch coordinates to screen (or image) coordinates
+            screenY = height - 1 - screenY;
 
-            Hexagon<HexagonData> hex = ScreenUtils.getHoveredHex(grid, screenX, screenY);
-            animationSubject = hex;
-            x1 = (float)hex.getCenterX();
-            y1 = (float)hex.getCenterY();
-            animate = true;
+            pause = !pause;
+
+            Hexagon<HexagonData> hex = ScreenUtils.getHoveredHex(grid, screenX-100, screenY-100);
+
+            if(hex!=null){
+                animationSubject = hex;
+                x1 = (float)hex.getCenterX();
+                y1 = (float)hex.getCenterY();
+                animate = true;
+                System.out.println("X: " + x1 + " Y: " + y1);
+            }
             return false;
         }
 
@@ -196,6 +210,10 @@ public class TestScreen implements Screen {
         public boolean scrolled(int amount) {
             return false;
         }
+    }
+
+    private class MyActor extends Actor {
+
     }
 
     @Override

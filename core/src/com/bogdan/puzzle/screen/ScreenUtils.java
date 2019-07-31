@@ -37,8 +37,8 @@ class ScreenUtils {
     static void drawEmptyHexagon(ShapeRenderer shapeRenderer, Hexagon<HexagonData> hexagon) {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(Color.GOLD);
-        shapeRenderer.polygon(ScreenUtils.convertToPointsArrWithOffset(hexagon, 20,
-                (float)hexagon.getExternalBoundingBox().getHeight()/2));
+        shapeRenderer.polygon(ScreenUtils.convertToPointsArrWithOffset(hexagon, 0, 0));
+//                (float)hexagon.getExternalBoundingBox().getHeight()/2));
 //        shapeRenderer.polygon(ScreenUtils.convertToPointsArr(hexagon));
         shapeRenderer.end();
     }

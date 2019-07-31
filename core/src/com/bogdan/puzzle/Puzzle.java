@@ -8,7 +8,7 @@ public class Puzzle extends Game {
 
 	@Override
 	public void create () {
-//        this.setScreen(new GameScreen(this));
-		this.setScreen(new TestScreen());
+        this.setScreen(new GameScreen(this));
+//		this.setScreen(new TestScreen());
 	}
 }

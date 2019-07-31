@@ -1,7 +1,7 @@
 %width height
 dimension 9 9
 %radius
-radius 30
+radius 100
 %hexagon orientation 1-flat top; 2-pointy top
 orientation 1
 %layout 1-rectangular; 2-hex; 3-triangle; 4-trapezoid
