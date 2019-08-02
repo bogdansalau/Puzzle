@@ -90,6 +90,7 @@ public class GameScreen implements Screen {
         font = new BitmapFont(true);
 
         font.setColor(Color.RED);
+        font.getData().setScale(5f);
     }
 
     private void centerCamera() {
