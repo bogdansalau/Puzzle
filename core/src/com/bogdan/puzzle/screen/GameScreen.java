@@ -17,6 +17,7 @@ import com.badlogic.gdx.utils.Timer;
 import com.bogdan.puzzle.Puzzle;
 import com.bogdan.puzzle.hexagon.HexagonData;
 import com.bogdan.puzzle.level.LevelController;
+import javafx.geometry.Point2D;
 import org.hexworks.mixite.core.api.Hexagon;
 import org.hexworks.mixite.core.api.HexagonalGrid;
 import org.hexworks.mixite.core.api.HexagonalGridCalculator;
@@ -223,6 +224,10 @@ public class GameScreen implements Screen {
         private int gameX;
         private int gameY;
 
+        private boolean isDragged = false;
+        private Vector2 startResetDragPoint;
+        private Vector2 stopResetDragPoint;
+
         // Grid dimensions
         private float gridWidth;
         private float gridHeight;
@@ -292,6 +297,16 @@ public class GameScreen implements Screen {
 
         @Override
         public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+            System.out.println("TOUCH UP EVENT");
+            if(isDragged) {
+                stopResetDragPoint = new Vector2(screenX, screenY);
+                isDragged = false;
+                float dist = stopResetDragPoint.dst(startResetDragPoint);
+                System.out.println("Drag distance:" + dist);
+                if ( dist > 2800 ) {
+                    launchNextLevel(1);
+                }
+            }
             createMode = true;
             return false;
         }
@@ -303,6 +318,7 @@ public class GameScreen implements Screen {
 
         @Override
         public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+            System.out.println("TOUCH DOWN EVENT");
             updateMousePos(screenX, screenY);
             // Find the hovered hexagon
             Hexagon<HexagonData> hex = ScreenUtils.getHoveredHex(hexagonalGrid, gameX, gameY);
@@ -324,6 +340,11 @@ public class GameScreen implements Screen {
 
         @Override
         public boolean touchDragged(int screenX, int screenY, int pointer) {
+            System.out.println("TOUCH DRAGGED EVENT");
+            if(!isDragged){
+                startResetDragPoint = new Vector2(screenX, screenY);
+                isDragged = true;
+            }
             updateMousePos(screenX, screenY);
             // Find the hovered hexagon
             Hexagon<HexagonData> hex = ScreenUtils.getHoveredHex(hexagonalGrid, gameX, gameY);
@@ -573,6 +594,22 @@ public class GameScreen implements Screen {
                 @Override
                 public void run() {
                     levelController.levelFinished();
+                    hexagonalGrid = levelController.getCurrentLevelHexagonalGrid();
+                    gridCalculator = levelController.getCurrentLevelHexagonalCalculator();
+                    currentLevelFixedHexagons = levelController.getCurrentLevelFixedHexagons();
+                    initHexagonArrays();
+                    centerCamera();
+                    isWon = false;
+                    isNextLevelLaunched = false;
+                }
+            }, 1);
+        }
+
+        private void launchNextLevel(int level) {
+            timer.scheduleTask(new Timer.Task() {
+                @Override
+                public void run() {
+                    levelController.levelFinished(level);
                     hexagonalGrid = levelController.getCurrentLevelHexagonalGrid();
                     gridCalculator = levelController.getCurrentLevelHexagonalCalculator();
                     currentLevelFixedHexagons = levelController.getCurrentLevelFixedHexagons();

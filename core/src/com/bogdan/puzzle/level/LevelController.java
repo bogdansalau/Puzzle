@@ -45,15 +45,21 @@ public class LevelController {
         prefs.flush();
     }
 
-    public void levelFinished(){
+    public void levelFinished(int level){
+        currentLevelId = level;
+        System.out.println(currentLevelId);
+        loadNextLevel();
+        updatePreferences();
+    }
 
+    public void levelFinished(){
         currentLevelId++;
         System.out.println(currentLevelId);
         loadNextLevel();
         updatePreferences();
     }
 
-    private void loadNextLevel(){
+    public void loadNextLevel(){
         levelReader.loadLevel(currentLevelId);
 
         currentLevel = new Level(
@@ -66,7 +72,10 @@ public class LevelController {
                 levelReader.getHiddenHexes());
     }
 
-
+    public void resetLevels() {
+        prefs.putInteger("currentLevel", FIRST_LEVEL_ID);
+        prefs.flush();
+    }
 
     public HexagonalGrid<HexagonData> getCurrentLevelHexagonalGrid() {
         return currentLevel.getHexagonalGrid();
