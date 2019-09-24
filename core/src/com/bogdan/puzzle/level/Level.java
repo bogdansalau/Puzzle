@@ -13,18 +13,13 @@ public class Level {
     private HexagonalGridCalculator gridCalculator;
     private ArrayList<Hexagon<HexagonData>> fixedHexagons;
 
-    Level(int width, int height, int radius,
-          HexagonOrientation orientation,
-          HexagonalGridLayout layout,
-          ArrayList<LevelReader.FixedHex> fixedHexes,
-          ArrayList<LevelReader.HiddenHex> hiddenHexes){
-
+    Level(LevelModel levelModel){
         HexagonalGridBuilder<HexagonData> builder = new HexagonalGridBuilder<HexagonData>()
-                .setGridWidth(width)
-                .setGridHeight(height)
-                .setRadius(radius)
-                .setOrientation(orientation)
-                .setGridLayout(layout);
+                .setGridWidth(levelModel.getWidth())
+                .setGridHeight(levelModel.getHeight())
+                .setRadius(levelModel.getRadius())
+                .setOrientation(intToHexOrientation(levelModel.getOrientation()))
+                .setGridLayout(intToHexGridLayout(levelModel.getLayout()));
         hexagonalGrid = builder.build();
         gridCalculator = builder.buildCalculatorFor(hexagonalGrid);
 
@@ -36,7 +31,7 @@ public class Level {
             boolean isVisible = true;
 
             // Compare each hexagon from the hexagonal grid with the fixed hexagons from the file
-            for(LevelReader.FixedHex fixedHex : fixedHexes){
+            for(FixedHex fixedHex : levelModel.getFixedHexes()){
                   // If the hexagon is fixed, update satellite data accordingly
                 if(hexagon.getId().equals(fixedHex.getId())){
                     hexagon.setSatelliteData(new HexagonDataBuilder()
@@ -50,9 +45,9 @@ public class Level {
             }
 
             // Only check if it is hidden if it is not fixed
-            if(!isFixed && !hiddenHexes.isEmpty()){
+            if(!isFixed && !levelModel.getHiddenHexes().isEmpty()){
                 // Compare each hexagon from the hexagonal grid with the hidden hexagons from the file
-                for(LevelReader.HiddenHex hiddenHex : hiddenHexes){
+                for(HiddenHex hiddenHex : levelModel.getHiddenHexes()){
                     // If the hexagon is hidden, update satellite data accordingly
                     if(hexagon.getId().equals(hiddenHex.getId())){
                         hexagon.setSatelliteData(new HexagonDataBuilder()
@@ -66,6 +61,21 @@ public class Level {
             if(!isFixed && isVisible){
                 hexagon.setSatelliteData(new HexagonDataBuilder().build());
             }
+        }
+    }
+
+    private HexagonOrientation intToHexOrientation(int hexOrientation){
+        if (hexOrientation == 1) return HexagonOrientation.FLAT_TOP;
+        else return HexagonOrientation.POINTY_TOP;
+    }
+
+    private HexagonalGridLayout intToHexGridLayout(int hexLayout){
+        switch(hexLayout){
+            case 1: return HexagonalGridLayout.RECTANGULAR;
+            case 2: return HexagonalGridLayout.HEXAGONAL;
+            case 3: return HexagonalGridLayout.TRIANGULAR;
+            case 4: return HexagonalGridLayout.TRAPEZOID;
+            default: return HexagonalGridLayout.HEXAGONAL;
         }
     }
 

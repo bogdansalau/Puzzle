@@ -11,6 +11,7 @@ import java.util.ArrayList;
 
 public class LevelController {
 
+    static final String LEVELS_PATH = "levels/";
     private static final int FIRST_LEVEL_ID = 1;
 
     private int currentLevelId;
@@ -28,16 +29,9 @@ public class LevelController {
             prefs.flush();
         }
 
-        levelReader.loadLevel(currentLevelId);
+        LevelModel levelModel = levelReader.loadLevel(1);
 
-        currentLevel = new Level(
-                levelReader.getGridWidth(),
-                levelReader.getGridHeight(),
-                levelReader.getRadius(),
-                levelReader.getOrientation(),
-                levelReader.getLayout(),
-                levelReader.getFixedHexes(),
-                levelReader.getHiddenHexes());
+        currentLevel = new Level(levelModel);
     }
 
     private void updatePreferences(){
@@ -60,16 +54,9 @@ public class LevelController {
     }
 
     public void loadNextLevel(){
-        levelReader.loadLevel(currentLevelId);
+        LevelModel levelModel = levelReader.loadLevel(currentLevelId);
 
-        currentLevel = new Level(
-                levelReader.getGridWidth(),
-                levelReader.getGridHeight(),
-                levelReader.getRadius(),
-                levelReader.getOrientation(),
-                levelReader.getLayout(),
-                levelReader.getFixedHexes(),
-                levelReader.getHiddenHexes());
+        currentLevel = new Level(levelModel);
     }
 
     public void resetLevels() {
