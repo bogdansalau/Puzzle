@@ -16,6 +16,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Timer;
 import com.bogdan.puzzle.Puzzle;
 import com.bogdan.puzzle.hexagon.HexagonData;
+import com.bogdan.puzzle.hud.TutorialHud;
 import com.bogdan.puzzle.level.LevelController;
 import javafx.geometry.Point2D;
 import org.hexworks.mixite.core.api.Hexagon;
@@ -58,6 +59,8 @@ public class GameScreen implements Screen {
     private float hexHeight;
     private float hexWidth;
 
+    private TutorialHud tutorialHud;
+
     private boolean isWon = false;
 
     private Puzzle game;
@@ -92,6 +95,8 @@ public class GameScreen implements Screen {
 
         font.setColor(Color.RED);
         font.getData().setScale(5f);
+
+        tutorialHud = new TutorialHud(batch);
     }
 
     private void centerCamera() {
@@ -108,7 +113,7 @@ public class GameScreen implements Screen {
     @Override
     public void render(float delta) {
         ScreenUtils.clearScreen(0.2f, 0, 0.6f, 1);
-
+        batch.setProjectionMatrix(camera.combined); //set the spriteBatch to draw what our stageViewport sees
 
         // Draw Hexagonal Grid
         for (Hexagon<HexagonData> hexagon : hexagonalGrid.getHexagons()) {
@@ -207,6 +212,10 @@ public class GameScreen implements Screen {
             font.draw(batch, str, 20, 20);
             batch.end();
         }
+
+        batch.setProjectionMatrix(tutorialHud.getStage().getCamera().combined); //set the spriteBatch to draw what our stageViewport sees
+        tutorialHud.getStage().act(delta); //act the Hud
+        tutorialHud.getStage().draw(); //draw the Hud
     }
 
     private class GameController implements InputProcessor {
@@ -323,6 +332,7 @@ public class GameScreen implements Screen {
             // Find the hovered hexagon
             Hexagon<HexagonData> hex = ScreenUtils.getHoveredHex(hexagonalGrid, gameX, gameY);
             if (hex != null) {
+                System.out.println("ID:" + hex.getId() + " X:" + hex.getGridX() + " Y:" + hex.getGridY());
                 if (isInsideSelectionCircle(hex)) {
                     // If a selected hexagon is clicked, backtrack the path to the respective step
                     if (selectedHexagons.contains(hex)) {

@@ -1,5 +1,6 @@
 package org.hexworks.mixite.swtexample;
 
+import jdk.nashorn.tools.Shell;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
@@ -10,8 +11,11 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.*;
 import org.hexworks.mixite.core.api.*;
 import org.hexworks.mixite.core.api.Point;
+import org.hexworks.mixite.core.api.Rectangle;
 import org.hexworks.mixite.core.vendor.Maybe;
 
+import java.awt.*;
+import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 

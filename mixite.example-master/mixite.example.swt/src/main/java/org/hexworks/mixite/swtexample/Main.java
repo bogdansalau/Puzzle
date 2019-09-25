@@ -1,10 +1,8 @@
 package org.hexworks.mixite.swtexample;
 
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
+import jdk.nashorn.tools.Shell;
 
-import static org.eclipse.swt.SWT.NONE;
+import java.awt.*;
 
 public class Main {
 

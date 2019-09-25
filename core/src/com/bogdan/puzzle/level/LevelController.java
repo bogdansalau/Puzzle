@@ -20,16 +20,18 @@ public class LevelController {
     private LevelReader levelReader = new LevelReader();
 
     public LevelController(){
-        prefs = Gdx.app.getPreferences("Puzzle_level_preferences");
-        if(prefs.contains("currentLevel")){
-            currentLevelId = prefs.getInteger("currentLevel");
-        } else {
-            currentLevelId = FIRST_LEVEL_ID;
-            prefs.putInteger("currentLevel", currentLevelId);
-            prefs.flush();
-        }
+//        prefs = Gdx.app.getPreferences("Puzzle_level_preferences");
+//        if(prefs.contains("currentLevel")){
+//            currentLevelId = prefs.getInteger("currentLevel");
+//        } else {
+//            currentLevelId = FIRST_LEVEL_ID;
+//            prefs.putInteger("currentLevel", currentLevelId);
+//            prefs.flush();
+//        }
 
-        LevelModel levelModel = levelReader.loadLevel(1);
+        currentLevelId = 1;
+
+        LevelModel levelModel = levelReader.loadLevel(currentLevelId);
 
         currentLevel = new Level(levelModel);
     }
