@@ -18,7 +18,6 @@ import com.bogdan.puzzle.Puzzle;
 import com.bogdan.puzzle.hexagon.HexagonData;
 import com.bogdan.puzzle.hud.TutorialHud;
 import com.bogdan.puzzle.level.LevelController;
-import javafx.geometry.Point2D;
 import org.hexworks.mixite.core.api.Hexagon;
 import org.hexworks.mixite.core.api.HexagonalGrid;
 import org.hexworks.mixite.core.api.HexagonalGridCalculator;

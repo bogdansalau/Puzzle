@@ -1,7 +1,6 @@
 package com.bogdan.puzzle.level;
 
 import com.badlogic.gdx.scenes.scene2d.ui.Value;
-import javafx.geometry.Point3D;
 
 import java.util.List;
 
@@ -57,7 +56,7 @@ public class LevelModel{
         this.radius = radius;
     }
 
-    public int getOrientation() {
+    int getOrientation() {
         return orientation;
     }
 
@@ -65,7 +64,7 @@ public class LevelModel{
         this.orientation = orientation;
     }
 
-    public int getLayout() {
+    int getLayout() {
         return layout;
     }
 
@@ -73,7 +72,7 @@ public class LevelModel{
         this.layout = layout;
     }
 
-    public List<FixedHex> getFixedHexes() {
+    List<FixedHex> getFixedHexes() {
         return fixedHexes;
     }
 
@@ -81,7 +80,7 @@ public class LevelModel{
         this.fixedHexes = fixedHexes;
     }
 
-    public List<HiddenHex> getHiddenHexes() {
+    List<HiddenHex> getHiddenHexes() {
         return hiddenHexes;
     }
 
