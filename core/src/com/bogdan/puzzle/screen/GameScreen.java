@@ -4,16 +4,18 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.FPSLogger;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
+import com.badlogic.gdx.assets.loaders.resolvers.ResolutionFileResolver;
+import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Timer;
+import com.bogdan.puzzle.Constants;
 import com.bogdan.puzzle.Puzzle;
 import com.bogdan.puzzle.hexagon.HexagonData;
 import com.bogdan.puzzle.hud.TutorialHud;
@@ -30,20 +32,15 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-public class GameScreen implements Screen {
-
-    // Settings
-    private static final boolean SHOW_EXTERNAL_BOUNDING_BOX = false;
-    private static final boolean SHOW_INTERNAL_BOUNDING_BOX = false;
-    private static final boolean SHOW_SELECTION_CIRCLE = false;
-    private static final boolean SHOW_GRID_BOUNDING_BOX = false;
+public class GameScreen implements Screen, Constants {
 
     // Rendering
     private ShapeRenderer shapeRenderer = new ShapeRenderer();
-    private BitmapFont font = new BitmapFont();
     private SpriteBatch batch = new SpriteBatch();
     private FPSLogger fpsLogger = new FPSLogger();
     private OrthographicCamera camera;
+    private ResolutionFileResolver fileResolver;
+    private Grid grid;
 
     // Game logic
     private ArrayList<Hexagon<HexagonData>> selectedHexagons = new ArrayList<>();
@@ -53,13 +50,11 @@ public class GameScreen implements Screen {
     private GameController gameController;
     private LevelController levelController;
     private Timer timer = new Timer();
-
-    // Level details
-    private float hexHeight;
-    private float hexWidth;
-
-    private TutorialHud tutorialHud;
-
+    private final float MINIMUM_VIEWPORT_WIDTH = 11.0f;
+//    private final float VIEWPORT_ASPECT_RATIO = 9.0f/18.5f;
+    private final float VIEWPORT_ASPECT_RATIO = Gdx.graphics.getWidth()/(float)Gdx.graphics.getHeight();
+    static final float GRID_WIDTH = 9.0f;
+    static final float GRID_HEIGHT = GRID_WIDTH*GRID_3X3X3_RATIO;
     private boolean isWon = false;
 
     private Puzzle game;
@@ -71,9 +66,20 @@ public class GameScreen implements Screen {
     @Override
     public void show() {
 
-        camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        camera.setToOrtho(true, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        // Texture
+        fileResolver = new ResolutionFileResolver(new InternalFileHandleResolver(), new ResolutionFileResolver.Resolution(1440, 2960, "1440x2960"));
+        grid = new Grid(new Sprite(new Texture(fileResolver.resolve("grids/grid_3x3x3.png"))));
+        grid.setPosition(0,0);
 
+        batch = new SpriteBatch();
+
+        // Camera
+        camera = new OrthographicCamera();
+
+        // Input processor
+        Gdx.input.setInputProcessor(gameController);
+
+        // Game
         // Create a new game controller and get the grid of the current level
         // The Level controller, on construction, sets the current level to the one mentioned in the preferences
         levelController = new LevelController();
@@ -82,37 +88,16 @@ public class GameScreen implements Screen {
 
         // Create a new game controller to solve the game logic and the input
         gameController = new GameController();
-        Gdx.input.setInputProcessor(gameController);
-
-        hexHeight = (float) hexagonalGrid.getGridData().getHexagonHeight();
-        hexWidth = (float) hexagonalGrid.getGridData().getHexagonWidth();
-
-        centerCamera();
-
-        font = new BitmapFont(Gdx.files.internal("font.fnt"), Gdx.files.internal("font.png"), false);
-        font = new BitmapFont(true);
-
-        font.setColor(Color.RED);
-        font.getData().setScale(5f);
-
-        tutorialHud = new TutorialHud(batch);
-    }
-
-    private void centerCamera() {
-        Matrix4 centerTranslationMatrix = new Matrix4().translate((Gdx.graphics.getWidth() - gameController.getGridWidth()) / 2,
-                (Gdx.graphics.getHeight() - gameController.getGridHeight()) / 2, 0);
-
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.setTransformMatrix(centerTranslationMatrix);
-        shapeRenderer.updateMatrices();
-        batch.setProjectionMatrix(camera.combined);
-        batch.setTransformMatrix(centerTranslationMatrix);
     }
 
     @Override
     public void render(float delta) {
         ScreenUtils.clearScreen(0.2f, 0, 0.6f, 1);
         batch.setProjectionMatrix(camera.combined); //set the spriteBatch to draw what our stageViewport sees
+
+        batch.begin();
+        grid.draw(batch);
+        batch.end();
 
         // Draw Hexagonal Grid
         for (Hexagon<HexagonData> hexagon : hexagonalGrid.getHexagons()) {
@@ -130,10 +115,6 @@ public class GameScreen implements Screen {
                 if (currHexData.isFixed()) {
                     CharSequence neighboursLeftToVisit = currHexData.getValue() - currHexData.getNrSelectedNeighbours() + "";
                     batch.begin();
-                    font.draw(batch,
-                            neighboursLeftToVisit,
-                            (int) (hexagon.getCenterX() - font.getXHeight() / 2),
-                            (int) (hexagon.getCenterY() - font.getCapHeight() / 2));
                     batch.end();
                 }
             }
@@ -143,9 +124,9 @@ public class GameScreen implements Screen {
                 Rectangle rect = hexagon.getExternalBoundingBox();
                 ScreenUtils.drawCircle(shapeRenderer, (float) rect.getX(), (float) rect.getY(), 3, Color.SCARLET);
                 ScreenUtils.drawRectangle(shapeRenderer, (float) rect.getX(), (float) rect.getY(), (float) rect.getWidth(), (float) rect.getHeight(), Color.RED);
-                batch.begin();
-                font.draw(batch, (int) rect.getY() + "", (float) rect.getX() + 5, (float) rect.getY() - 5);
-                batch.end();
+//                batch.begin();
+//                font.draw(batch, (int) rect.getY() + "", (float) rect.getX() + 5, (float) rect.getY() - 5);
+//                batch.end();
             }
             if (SHOW_INTERNAL_BOUNDING_BOX) {
                 Rectangle rect = hexagon.getInternalBoundingBox();
@@ -155,14 +136,11 @@ public class GameScreen implements Screen {
                 ScreenUtils.drawCircle(shapeRenderer, (float) hexagon.getCenterX(), (float) hexagon.getCenterY(), gameController.getSelectionRadius(), Color.FOREST);
             }
         }
-
         if (SHOW_GRID_BOUNDING_BOX) {
             shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
             shapeRenderer.rect(0, 0, gameController.getGridWidth(), gameController.getGridHeight());
             shapeRenderer.end();
         }
-
-
         // Draw a circle at the center of hexagons that can be selected next
         for (Hexagon<HexagonData> hexagon : nextPossibleSelection) {
             ScreenUtils.drawCircle(shapeRenderer, (float) hexagon.getCenterX(), (float) hexagon.getCenterY(), 10, Color.CHARTREUSE);
@@ -207,14 +185,30 @@ public class GameScreen implements Screen {
                     3,
                     Color.BLACK);
             CharSequence str = "You won!";
-            batch.begin();
-            font.draw(batch, str, 20, 20);
-            batch.end();
+//            batch.begin();
+//            font.draw(batch, str, 20, 20);
+//            batch.end();
         }
 
-        batch.setProjectionMatrix(tutorialHud.getStage().getCamera().combined); //set the spriteBatch to draw what our stageViewport sees
-        tutorialHud.getStage().act(delta); //act the Hud
-        tutorialHud.getStage().draw(); //draw the Hud
+
+    }
+
+    public static class Grid {
+
+        private final Sprite gridSprite;
+
+        public Grid(Sprite gridSprite) {
+            gridSprite.setSize(GRID_WIDTH, GRID_HEIGHT);
+            this.gridSprite = gridSprite;
+        }
+
+        public void setPosition(float x, float y) {
+            gridSprite.setPosition(x - 0.5f * gridSprite.getWidth(), y - 0.5f * gridSprite.getHeight());
+        }
+
+        public void draw(Batch batch) {
+           gridSprite.draw(batch);
+        }
     }
 
     private class GameController implements InputProcessor {
@@ -312,7 +306,7 @@ public class GameScreen implements Screen {
                 float dist = stopResetDragPoint.dst(startResetDragPoint);
                 System.out.println("Drag distance:" + dist);
                 if ( dist > 2800 ) {
-                    launchNextLevel(1);
+                    launchNextLevel();
                 }
             }
             createMode = true;
@@ -607,23 +601,6 @@ public class GameScreen implements Screen {
                     gridCalculator = levelController.getCurrentLevelHexagonalCalculator();
                     currentLevelFixedHexagons = levelController.getCurrentLevelFixedHexagons();
                     initHexagonArrays();
-                    centerCamera();
-                    isWon = false;
-                    isNextLevelLaunched = false;
-                }
-            }, 1);
-        }
-
-        private void launchNextLevel(int level) {
-            timer.scheduleTask(new Timer.Task() {
-                @Override
-                public void run() {
-                    levelController.levelFinished(level);
-                    hexagonalGrid = levelController.getCurrentLevelHexagonalGrid();
-                    gridCalculator = levelController.getCurrentLevelHexagonalCalculator();
-                    currentLevelFixedHexagons = levelController.getCurrentLevelFixedHexagons();
-                    initHexagonArrays();
-                    centerCamera();
                     isWon = false;
                     isNextLevelLaunched = false;
                 }
@@ -677,8 +654,10 @@ public class GameScreen implements Screen {
     }
 
     @Override
-    public void resize(int width, int height) {
-
+    public void resize (int width, int height) {
+        camera.viewportHeight = MINIMUM_VIEWPORT_WIDTH/VIEWPORT_ASPECT_RATIO;
+        camera.viewportWidth = MINIMUM_VIEWPORT_WIDTH;
+        camera.update();
     }
 
     @Override

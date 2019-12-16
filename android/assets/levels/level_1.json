@@ -1,7 +1,6 @@
 {
   "width": 3,
   "height": 3,
-  "radius": 60,
   "orientation": 1,
   "layout": 2,
   "fixedHexes": [

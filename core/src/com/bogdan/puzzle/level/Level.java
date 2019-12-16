@@ -17,7 +17,7 @@ public class Level {
         HexagonalGridBuilder<HexagonData> builder = new HexagonalGridBuilder<HexagonData>()
                 .setGridWidth(levelModel.getWidth())
                 .setGridHeight(levelModel.getHeight())
-                .setRadius(levelModel.getRadius())
+                .setRadius(levelModel.getHeight() == 3 ? (float)9/5 : (float) 9/8)
                 .setOrientation(intToHexOrientation(levelModel.getOrientation()))
                 .setGridLayout(intToHexGridLayout(levelModel.getLayout()));
         hexagonalGrid = builder.build();

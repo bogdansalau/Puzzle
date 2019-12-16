@@ -41,13 +41,6 @@ public class LevelController {
         prefs.flush();
     }
 
-    public void levelFinished(int level){
-        currentLevelId = level;
-        System.out.println(currentLevelId);
-        loadNextLevel();
-        updatePreferences();
-    }
-
     public void levelFinished(){
         currentLevelId++;
         System.out.println(currentLevelId);
@@ -57,7 +50,6 @@ public class LevelController {
 
     public void loadNextLevel(){
         LevelModel levelModel = levelReader.loadLevel(currentLevelId);
-
         currentLevel = new Level(levelModel);
     }
 

@@ -7,7 +7,6 @@ import java.util.List;
 public class LevelModel{
     private int width;
     private int height;
-    private int radius;
     private int orientation;
     private int layout;
     private List<FixedHex> fixedHexes;
@@ -16,16 +15,14 @@ public class LevelModel{
     /**
      * @param width - the width of the hexagonal grid
      * @param height - the height of the hexagonal grid
-     * @param radius - the radius of the hexagonal grid
      * @param orientation - 1-flat top; 2-pointy top;
      * @param layout - 1-rectangular; 2-hex; 3-triangle; 4-trapezoid;
      * @param fixedHexes - x-idx; y-idy; z-value, 0 < z < 6
      * @param hiddenHexes - x-idx; y-idy; z-value, 0 < z < 6
      * */
-    public LevelModel(int width, int height, int radius, int orientation, int layout, List<FixedHex> fixedHexes, List<HiddenHex> hiddenHexes) {
+    public LevelModel(int width, int height, int orientation, int layout, List<FixedHex> fixedHexes, List<HiddenHex> hiddenHexes) {
         this.width = width;
         this.height = height;
-        this.radius = radius;
         this.orientation = orientation;
         this.layout = layout;
         this.fixedHexes = fixedHexes;
@@ -46,14 +43,6 @@ public class LevelModel{
 
     public void setHeight(int height) {
         this.height = height;
-    }
-
-    public int getRadius() {
-        return radius;
-    }
-
-    public void setRadius(int radius) {
-        this.radius = radius;
     }
 
     int getOrientation() {
