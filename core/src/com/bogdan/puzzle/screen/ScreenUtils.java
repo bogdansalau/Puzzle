@@ -15,13 +15,14 @@ import org.hexworks.mixite.core.vendor.Maybe;
 import java.awt.*;
 import java.util.Collection;
 
+import static java.lang.StrictMath.sqrt;
+
 class ScreenUtils {
 
     static void clearScreen(float red, float green, float blue, float alpha){
         // Clear Screen
         Gdx.gl.glClearColor(red, green, blue, alpha);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT | (Gdx.graphics.getBufferFormat().coverageSampling?GL20.GL_COVERAGE_BUFFER_BIT_NV:0));
-
     }
 
     static void drawCenteredHexagon(ShapeRenderer shapeRenderer, Hexagon<HexagonData> hexagon, HexagonalGrid<HexagonData> grid){
@@ -33,7 +34,7 @@ class ScreenUtils {
 //        shapeRenderer.polygon(ScreenUtils.convertToPointsArr(hexagon));
         shapeRenderer.end();
     }
-
+//(float)2*(9/5)*(float)(sqrt(3)/(float)2))
     static void drawEmptyHexagon(ShapeRenderer shapeRenderer, Hexagon<HexagonData> hexagon) {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(Color.GOLD);
@@ -43,10 +44,10 @@ class ScreenUtils {
         shapeRenderer.end();
     }
 
-    static void drawCircle(ShapeRenderer shapeRenderer, float x, float y, int radius, Color color){
+    static void drawCircle(ShapeRenderer shapeRenderer, float x, float y, float radius, Color color){
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(color);
-        shapeRenderer.circle(x, y, radius);
+        shapeRenderer.circle(x, y, radius, 100);
         shapeRenderer.end();
     }
 

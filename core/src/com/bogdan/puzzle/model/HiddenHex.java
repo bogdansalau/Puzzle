@@ -1,4 +1,6 @@
-package com.bogdan.puzzle.level;
+package com.bogdan.puzzle.model;
 
-public class HiddenHex extends Hex{
+import com.bogdan.puzzle.model.Hex;
+
+public class HiddenHex extends Hex {
 }

@@ -1,4 +1,4 @@
-package com.bogdan.puzzle.level;
+package com.bogdan.puzzle.model;
 
 public abstract class Hex {
 

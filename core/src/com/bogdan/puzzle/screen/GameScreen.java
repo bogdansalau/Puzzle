@@ -14,12 +14,15 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.ObjectSet;
 import com.badlogic.gdx.utils.Timer;
 import com.bogdan.puzzle.Constants;
 import com.bogdan.puzzle.Puzzle;
 import com.bogdan.puzzle.hexagon.HexagonData;
 import com.bogdan.puzzle.hud.TutorialHud;
 import com.bogdan.puzzle.level.LevelController;
+import net.dermetfan.gdx.physics.box2d.PositionController;
 import org.hexworks.mixite.core.api.Hexagon;
 import org.hexworks.mixite.core.api.HexagonalGrid;
 import org.hexworks.mixite.core.api.HexagonalGridCalculator;
@@ -41,6 +44,7 @@ public class GameScreen implements Screen, Constants {
     private OrthographicCamera camera;
     private ResolutionFileResolver fileResolver;
     private Grid grid;
+    private ObjectSet<Sprite> redDot = new ObjectSet<>();
 
     // Game logic
     private ArrayList<Hexagon<HexagonData>> selectedHexagons = new ArrayList<>();
@@ -50,7 +54,7 @@ public class GameScreen implements Screen, Constants {
     private GameController gameController;
     private LevelController levelController;
     private Timer timer = new Timer();
-    private final float MINIMUM_VIEWPORT_WIDTH = 11.0f;
+    private final float MINIMUM_VIEWPORT_WIDTH = 19.0f;
 //    private final float VIEWPORT_ASPECT_RATIO = 9.0f/18.5f;
     private final float VIEWPORT_ASPECT_RATIO = Gdx.graphics.getWidth()/(float)Gdx.graphics.getHeight();
     static final float GRID_WIDTH = 9.0f;
@@ -76,8 +80,7 @@ public class GameScreen implements Screen, Constants {
         // Camera
         camera = new OrthographicCamera();
 
-        // Input processor
-        Gdx.input.setInputProcessor(gameController);
+
 
         // Game
         // Create a new game controller and get the grid of the current level
@@ -85,16 +88,37 @@ public class GameScreen implements Screen, Constants {
         levelController = new LevelController();
         hexagonalGrid = levelController.getCurrentLevelHexagonalGrid();
         gridCalculator = levelController.getCurrentLevelHexagonalCalculator();
-
         // Create a new game controller to solve the game logic and the input
         gameController = new GameController();
+
+        boolean first = true;
+        for(Hexagon<HexagonData> hex: hexagonalGrid.getHexagons()) {
+            if(first) {
+                shapeRenderer.translate(0, -(float)hex.getExternalBoundingBox().getHeight()/2, 0);
+                shapeRenderer.translate(-gameController.getGridWidth()/2, -gameController.getGridHeight()/2, 0);
+                first = false;
+            }
+
+            System.out.println(hex.getCenterX() + " " + hex.getCenterY() + " X:" + hex.getGridX() + " Y:" + hex.getGridY());
+            Sprite dot = new Sprite(new Texture(fileResolver.resolve("red_dot.png")));
+            dot.setSize(7.0f, 7.0f);
+            setPosition(dot, (float)hex.getCenterX(), (float)hex.getCenterY());
+            redDot.add(dot);
+        }
+
+
+
+        // Input processor
+        Gdx.input.setInputProcessor(gameController);
     }
 
     @Override
     public void render(float delta) {
         ScreenUtils.clearScreen(0.2f, 0, 0.6f, 1);
+        camera.update();
         batch.setProjectionMatrix(camera.combined); //set the spriteBatch to draw what our stageViewport sees
-
+        shapeRenderer.setProjectionMatrix(camera.combined);
+//        shapeRenderer.setT
         batch.begin();
         grid.draw(batch);
         batch.end();
@@ -122,20 +146,14 @@ public class GameScreen implements Screen, Constants {
 
             if (SHOW_EXTERNAL_BOUNDING_BOX) {
                 Rectangle rect = hexagon.getExternalBoundingBox();
-                ScreenUtils.drawCircle(shapeRenderer, (float) rect.getX(), (float) rect.getY(), 3, Color.SCARLET);
                 ScreenUtils.drawRectangle(shapeRenderer, (float) rect.getX(), (float) rect.getY(), (float) rect.getWidth(), (float) rect.getHeight(), Color.RED);
-//                batch.begin();
-//                font.draw(batch, (int) rect.getY() + "", (float) rect.getX() + 5, (float) rect.getY() - 5);
-//                batch.end();
             }
             if (SHOW_INTERNAL_BOUNDING_BOX) {
                 Rectangle rect = hexagon.getInternalBoundingBox();
                 ScreenUtils.drawRectangle(shapeRenderer, (float) rect.getX(), (float) rect.getY(), (float) rect.getWidth(), (float) rect.getHeight(), Color.RED);
             }
-            if (SHOW_SELECTION_CIRCLE) {
-                ScreenUtils.drawCircle(shapeRenderer, (float) hexagon.getCenterX(), (float) hexagon.getCenterY(), gameController.getSelectionRadius(), Color.FOREST);
-            }
         }
+
         if (SHOW_GRID_BOUNDING_BOX) {
             shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
             shapeRenderer.rect(0, 0, gameController.getGridWidth(), gameController.getGridHeight());
@@ -143,8 +161,7 @@ public class GameScreen implements Screen, Constants {
         }
         // Draw a circle at the center of hexagons that can be selected next
         for (Hexagon<HexagonData> hexagon : nextPossibleSelection) {
-            ScreenUtils.drawCircle(shapeRenderer, (float) hexagon.getCenterX(), (float) hexagon.getCenterY(), 10, Color.CHARTREUSE);
-//            ScreenUtils.drawCircle(shapeRenderer, (float) hexagon.getCenterX(), (float) hexagon.getCenterY(), 10, Color.BLACK);
+            ScreenUtils.drawCircle(shapeRenderer, (float) hexagon.getCenterX(), (float) hexagon.getCenterY(), (float)hexagon.getInternalBoundingBox().getWidth()/2, Color.CHARTREUSE);
         }
 
         // Draw the hexagons that were already selected
@@ -190,7 +207,11 @@ public class GameScreen implements Screen, Constants {
 //            batch.end();
         }
 
-
+        batch.begin();
+        for (Sprite s: redDot) {
+            s.draw(batch);
+        }
+        batch.end();
     }
 
     public static class Grid {
@@ -218,9 +239,6 @@ public class GameScreen implements Screen, Constants {
         private Hexagon<HexagonData> lastHexID = null;
 
         private boolean createMode = true;
-
-        // Hexagon will be selected on touchDown only if the input is in within the circle with center at the hex center and radius selectionRadius
-        private int selectionRadius = (int) (hexagonalGrid.getGridData().getRadius() * (5.0 / 6.0));
 
         // Game coordinates
         private int gameX;
@@ -322,20 +340,20 @@ public class GameScreen implements Screen, Constants {
         public boolean touchDown(int screenX, int screenY, int pointer, int button) {
             System.out.println("TOUCH DOWN EVENT");
             updateMousePos(screenX, screenY);
+            Vector3 gameWorldMouse = camera.unproject(new Vector3(screenX, screenY, 0));
+
             // Find the hovered hexagon
-            Hexagon<HexagonData> hex = ScreenUtils.getHoveredHex(hexagonalGrid, gameX, gameY);
+            Hexagon<HexagonData> hex = ScreenUtils.getHoveredHex(hexagonalGrid, (int)gameWorldMouse.x, (int)gameWorldMouse.y);
             if (hex != null) {
                 System.out.println("ID:" + hex.getId() + " X:" + hex.getGridX() + " Y:" + hex.getGridY());
-                if (isInsideSelectionCircle(hex)) {
-                    // If a selected hexagon is clicked, backtrack the path to the respective step
-                    if (selectedHexagons.contains(hex)) {
-                        createMode = false;
-                        backtrackPath(hex);
-                    } else {
-                        handleInput(hex);
-                        updateFixedHexagons();
-                        checkWinCondition();
-                    }
+                // If a selected hexagon is clicked, backtrack the path to the respective step
+                if (selectedHexagons.contains(hex)) {
+                    createMode = false;
+                    backtrackPath(hex);
+                } else {
+                    handleInput(hex);
+                    updateFixedHexagons();
+                    checkWinCondition();
                 }
             }
             return false;
@@ -343,7 +361,7 @@ public class GameScreen implements Screen, Constants {
 
         @Override
         public boolean touchDragged(int screenX, int screenY, int pointer) {
-            System.out.println("TOUCH DRAGGED EVENT");
+            // System.out.println("TOUCH DRAGGED EVENT");
             if(!isDragged){
                 startResetDragPoint = new Vector2(screenX, screenY);
                 isDragged = true;
@@ -352,11 +370,9 @@ public class GameScreen implements Screen, Constants {
             // Find the hovered hexagon
             Hexagon<HexagonData> hex = ScreenUtils.getHoveredHex(hexagonalGrid, gameX, gameY);
             if (hex != null && createMode) {
-                if (isInsideSelectionCircle(hex)) {
-                    handleInput(hex);
-                    updateFixedHexagons();
-                    checkWinCondition();
-                }
+                handleInput(hex);
+                updateFixedHexagons();
+                checkWinCondition();
             }
             return false;
         }
@@ -402,25 +418,15 @@ public class GameScreen implements Screen, Constants {
         private void handleInput(Hexagon<HexagonData> hexagon) {
 
             if (hexagon != null && isAvailable(hexagon.getSatelliteData().get())) {
-                if (isInsideSelectionCircle(hexagon)) {
-                    // Case in which the selected hex is first in the row
-                    if (selectedHexagons.size() == 0) {
-                        handleFirstHexagon(hexagon);
-                    } else if (selectedHexagons.size() == 1) {
-                        handleSecondHexagon(hexagon);
-                    } else {
-                        handleMultipleHexagons(hexagon);
-                    }
+                // Case in which the selected hex is first in the row
+                if (selectedHexagons.size() == 0) {
+                    handleFirstHexagon(hexagon);
+                } else if (selectedHexagons.size() == 1) {
+                    handleSecondHexagon(hexagon);
+                } else {
+                    handleMultipleHexagons(hexagon);
                 }
             }
-        }
-
-        private boolean isInsideSelectionCircle(Hexagon<HexagonData> hexagon) {
-            double centerX = hexagon.getCenterX();
-            double centerY = hexagon.getCenterY();
-
-            // Return true if the mouse is in the hexagon selection circle
-            return ScreenUtils.distance(centerX, centerY, gameX, gameY) < selectionRadius;
         }
 
         private void handleFirstHexagon(Hexagon<HexagonData> hexagon) {
@@ -532,10 +538,6 @@ public class GameScreen implements Screen, Constants {
 
         Hexagon<HexagonData> getLastHexID() {
             return lastHexID;
-        }
-
-        int getSelectionRadius() {
-            return selectionRadius;
         }
 
         float getGridWidth() {
@@ -658,6 +660,10 @@ public class GameScreen implements Screen, Constants {
         camera.viewportHeight = MINIMUM_VIEWPORT_WIDTH/VIEWPORT_ASPECT_RATIO;
         camera.viewportWidth = MINIMUM_VIEWPORT_WIDTH;
         camera.update();
+    }
+
+    private static void setPosition(Sprite s, float x, float y) {
+        s.setPosition(x - 0.5f * s.getWidth(), y - 0.5f * s.getHeight());
     }
 
     @Override

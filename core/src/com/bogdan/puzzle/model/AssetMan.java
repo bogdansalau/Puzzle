@@ -1,4 +1,4 @@
-package com.bogdan.puzzle.data;
+package com.bogdan.puzzle.model;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;

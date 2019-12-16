@@ -12,6 +12,7 @@ public class DesktopLauncher {
 		config.width = 1440/5;
 		config.height = 2960/5;
 		config.samples = 3;
+		System.out.println("Application starting");
 		//config.foregroundFPS = 30;
 		new LwjglApplication(new Puzzle(), config);
 //	    new LwjglApplication(new TiledMapBench(), config);

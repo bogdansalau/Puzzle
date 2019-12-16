@@ -1,6 +1,8 @@
 package com.bogdan.puzzle.level;
 
 import com.badlogic.gdx.scenes.scene2d.ui.Value;
+import com.bogdan.puzzle.model.FixedHex;
+import com.bogdan.puzzle.model.HiddenHex;
 
 import java.util.List;
 

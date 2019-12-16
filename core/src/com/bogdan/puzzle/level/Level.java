@@ -2,6 +2,8 @@ package com.bogdan.puzzle.level;
 
 import com.bogdan.puzzle.hexagon.HexagonData;
 import com.bogdan.puzzle.hexagon.HexagonDataBuilder;
+import com.bogdan.puzzle.model.FixedHex;
+import com.bogdan.puzzle.model.HiddenHex;
 import org.hexworks.mixite.core.api.*;
 
 import java.util.ArrayList;
