@@ -1,0 +1,106 @@
+@Override
+        public boolean keyUp(int keycode) {
+            return false;
+        }
+
+        @Override
+        public boolean keyTyped(char character) {
+            return false;
+        }
+
+        @Override
+        public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+            System.out.println("TOUCH UP EVENT");
+            if(isDragged) {
+                stopResetDragPoint = new Vector2(screenX, screenY);
+                isDragged = false;
+                float dist = stopResetDragPoint.dst(startResetDragPoint);
+                System.out.println("Drag distance:" + dist);
+                if ( dist > 2800 ) {
+                    launchNextLevel();
+                }
+            }
+            createMode = true;
+            return false;
+        }
+
+        @Override
+        public boolean scrolled(int amount) {
+            return false;
+        }
+
+        @Override
+        public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+            System.out.println("TOUCH DOWN EVENT");
+            updateMousePos(screenX, screenY);
+            Vector3 gameWorldMouse = camera.unproject(new Vector3(screenX, screenY, 0));
+
+            // Find the hovered hexagon
+            Hexagon<HexagonData> hex = ScreenUtils.getHoveredHex(hexagonalGrid, (int)gameWorldMouse.x, (int)gameWorldMouse.y);
+            if (hex != null) {
+                System.out.println("ID:" + hex.getId() + " X:" + hex.getGridX() + " Y:" + hex.getGridY());
+                // If a selected hexagon is clicked, backtrack the path to the respective step
+                if (selectedHexagons.contains(hex)) {
+                    createMode = false;
+                    backtrackPath(hex);
+                } else {
+                    handleInput(hex);
+                    updateFixedHexagons();
+                    checkWinCondition();
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public boolean touchDragged(int screenX, int screenY, int pointer) {
+            // System.out.println("TOUCH DRAGGED EVENT");
+            if(!isDragged){
+                startResetDragPoint = new Vector2(screenX, screenY);
+                isDragged = true;
+            }
+            updateMousePos(screenX, screenY);
+            // Find the hovered hexagon
+            Hexagon<HexagonData> hex = ScreenUtils.getHoveredHex(hexagonalGrid, gameX, gameY);
+            if (hex != null && createMode) {
+                handleInput(hex);
+                updateFixedHexagons();
+                checkWinCondition();
+            }
+            return false;
+        }
+
+        @Override
+        public boolean keyDown(int keycode) {
+            if (Input.Keys.R == keycode) {
+                initHexagonArrays();
+
+                // Clear each hexagon
+                // Mark the unfixed ones as not selected
+                // Change nr of neighbours of fixed ones
+                for (Hexagon<HexagonData> hexagon : hexagonalGrid.getHexagons()) {
+                    HexagonData data = hexagon.getSatelliteData().get();
+                    // Init fixed hexes
+                    if (data.isFixed()) {
+                        data.setNrSelectedNeighbours(0);
+                    } else if (!data.isVisible()) {
+                        data.setSelected(false);
+                    } else {
+                        data.setSelected(false);
+                        data.setNrSelectedNeighbours(0);
+                    }
+                }
+                lastHexID = null;
+                beforeLastHexID = null;
+                firstHexID = null;
+                isWon = false;
+            }
+            return false;
+        }
+
+        @Override
+        public boolean mouseMoved(int screenX, int screenY) {
+            updateMousePos(screenX, screenY);
+//            System.out.println(gameX + " " + gameY);
+            return false;
+        }
