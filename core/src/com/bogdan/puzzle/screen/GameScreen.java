@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import static java.lang.Math.sqrt;
+
 
 public class GameScreen implements Screen, GlobalConstants {
 
@@ -34,6 +36,9 @@ public class GameScreen implements Screen, GlobalConstants {
     private ObjectSet<Sprite> redDots = new ObjectSet<>();
     private AssetManager assetManager = new AssetManager();
     private Grid grid;
+    private Hex hex1;
+    private Hex hex2;
+    private Hex hex3;
     private Map<String, String> loadedFiles = new HashMap<>();
 
     // Camera
@@ -52,7 +57,6 @@ public class GameScreen implements Screen, GlobalConstants {
     Stage stage;
 
     private Puzzle game;
-    private Jet[] jets;
     public GameScreen(Puzzle game) {
         this.game = game;
     }
@@ -82,12 +86,17 @@ public class GameScreen implements Screen, GlobalConstants {
 
 
         stage.addActor(hexTileActor1);
-        grid = new Grid(new Sprite(assets.getHex3()));
-        grid.setPosition(0,0);
+
+        hex1 = new Hex(new Sprite(assets.getHex3()));
+        hex2 = new Hex(new Sprite(assets.getHex3()));
+        hex3 = new Hex(new Sprite(assets.getHex3()));
+        hex1.setPosition(0,0);
+        hex2.setPosition((3.0f/4.0f)*2*HEX_RADIUS_3,(float)sqrt(3)*HEX_RADIUS_3/2);
+        hex3.setPosition(0,(float)sqrt(3)*HEX_RADIUS_3);
 
 
         // Input processor
-        Gdx.input.setInputProcessor(stage);
+//        Gdx.input.setInputProcessor(stage);
     }
 
     private void createRedDots() {
@@ -105,20 +114,22 @@ public class GameScreen implements Screen, GlobalConstants {
     @Override
     public void render(float delta) {
         ScreenUtils.clearScreen(0.2f, 0, 0.6f, 1);
-        stage.act(Gdx.graphics.getDeltaTime());
-        stage.draw();
-//        camera.update();
-//        batch.setProjectionMatrix(camera.combined); //set the spriteBatch to draw what our stageViewport sees
+//        stage.act(Gdx.graphics.getDeltaTime());
+//        stage.draw();
+        camera.update();
+        batch.setProjectionMatrix(camera.combined); //set the spriteBatch to draw what our stageViewport sees
 //
-//        batch.begin();
+        batch.begin();
 //        stage.act();
 //        stage.draw();
-////        grid.draw(batch);
+        hex1.draw(batch);
+        hex2.draw(batch);
+        hex3.draw(batch);
 //        hexTileActor1.draw(batch, 1f);
 //        for(Sprite s: redDots) {
 //            s.draw(batch);
 //        }
-//        batch.end();
+        batch.end();
     }
 
     public static class Hex {
@@ -126,7 +137,7 @@ public class GameScreen implements Screen, GlobalConstants {
         private final Sprite hexSprite;
 
         public Hex(Sprite hexSprite) {
-            hexSprite.setSize(GRID_WIDTH, GRID_HEIGHT);
+            hexSprite.setSize(2*HEX_RADIUS_3, (float)sqrt(3)*HEX_RADIUS_3);
             this.hexSprite = hexSprite;
         }
 
@@ -156,63 +167,12 @@ public class GameScreen implements Screen, GlobalConstants {
            gridSprite.draw(batch);
         }
     }
-    class Jet extends Actor {
-        private TextureRegion _texture;
-
-        public Jet(TextureRegion texture){
-            _texture = texture;
-            setBounds(getX(),getY(),_texture.getRegionWidth(), _texture.getRegionHeight());
-
-            this.addListener(new InputListener(){
-                public boolean touchDown(InputEvent event, float x, float y, int pointer, int buttons){
-                    System.out.println("Touched" + getName());
-                    setVisible(false);
-                    return true;
-                }
-            });
-        }
-
-        // Implement the full form of draw() so we can handle rotation and scaling.
-        public void draw(Batch batch, float alpha){
-            batch.draw(_texture, getX(), getY(), getOriginX(), getOriginY(), getWidth(), getHeight(),
-                    getScaleX(), getScaleY(), getRotation());
-        }
-
-        // This hit() instead of checking against a bounding box, checks a bounding circle.
-        public Actor hit(float x, float y, boolean touchable){
-            // If this Actor is hidden or untouchable, it cant be hit
-            if(!this.isVisible() || this.getTouchable() == Touchable.disabled)
-                return null;
-
-            // Get centerpoint of bounding circle, also known as the center of the rect
-            float centerX = getWidth()/2;
-            float centerY = getHeight()/2;
-
-            // Square roots are bad m'kay. In "real" code, simply square both sides for much speedy fastness
-            // This however is the proper, unoptimized and easiest to grok equation for a hit within a circle
-            // You could of course use LibGDX's Circle class instead.
-
-            // Calculate radius of circle
-            float radius = (float) Math.sqrt(centerX * centerX +
-                    centerY * centerY);
-
-            // And distance of point from the center of the circle
-            float distance = (float) Math.sqrt(((centerX - x) * (centerX - x))
-                    + ((centerY - y) * (centerY - y)));
-
-            // If the distance is less than the circle radius, it's a hit
-            if(distance <= radius) return this;
-
-            // Otherwise, it isnt
-            return null;
-        }
-    }
 
     @Override
     public void resize (int width, int height) {
-//        camera.viewportHeight = MINIMUM_VIEWPORT_WIDTH/VIEWPORT_ASPECT_RATIO;
-//        camera.viewportWidth = MINIMUM_VIEWPORT_WIDTH;
-//        camera.update();
+        camera.viewportHeight = MINIMUM_VIEWPORT_WIDTH/VIEWPORT_ASPECT_RATIO;
+        camera.viewportWidth = MINIMUM_VIEWPORT_WIDTH;
+        camera.update();
 //        stage.setViewport(new ExtendViewport(camera.viewportWidth, camera.viewportHeight));
     }
 

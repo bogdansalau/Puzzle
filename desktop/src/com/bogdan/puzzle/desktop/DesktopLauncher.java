@@ -8,7 +8,7 @@ import com.bogdan.puzzle.tests.TiledMapBench;
 public class DesktopLauncher {
 	public static void main (String[] arg) {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-		config.useGL30 = true;
+		config.useGL30 = false;
 		config.width = 1440/5;
 		config.height = 2960/5;
 		config.samples = 3;
