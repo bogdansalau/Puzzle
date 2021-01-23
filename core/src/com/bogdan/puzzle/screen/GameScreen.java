@@ -13,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.utils.ObjectSet;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.bogdan.puzzle.GlobalConstants;
 import com.bogdan.puzzle.Puzzle;
 
@@ -64,7 +65,10 @@ public class GameScreen implements Screen, GlobalConstants {
     @Override
     public void show() {
         camera = new OrthographicCamera();
-        stage = new Stage(new ExtendViewport(camera.viewportWidth, camera.viewportHeight), batch);
+        camera.viewportHeight = MINIMUM_VIEWPORT_WIDTH/VIEWPORT_ASPECT_RATIO;
+        camera.viewportWidth = MINIMUM_VIEWPORT_WIDTH;
+        camera.update();
+        stage = new Stage(new FitViewport(camera.viewportWidth, camera.viewportHeight), batch);
 
 
         // Texture
@@ -77,15 +81,7 @@ public class GameScreen implements Screen, GlobalConstants {
         assets.load();
         TextureRegion hexTextureRegion = new TextureRegion(assets.getHex7());
 
-        hexTileActor1 = new HexTileActor(hexTextureRegion, new Hexagon("1,1", 1, 1, 1), 3);
-//        hexTileActor2 = new HexTileActor(new Sprite(assets.getHex3()), new Hexagon("1,2", 1, 2, 2), 3);
-//        hexTileActor3 = new HexTileActor(new Sprite(assets.getHex3()), new Hexagon("1,3", 1, 3, 3), 3);
-        hexTileActor1.setPosition(0f, 0f);
 
-
-
-
-        stage.addActor(hexTileActor1);
 
         hex1 = new Hex(new Sprite(assets.getHex3()));
         hex2 = new Hex(new Sprite(assets.getHex3()));
@@ -93,6 +89,13 @@ public class GameScreen implements Screen, GlobalConstants {
         hex1.setPosition(0,0);
         hex2.setPosition((3.0f/4.0f)*2*HEX_RADIUS_3,(float)sqrt(3)*HEX_RADIUS_3/2);
         hex3.setPosition(0,(float)sqrt(3)*HEX_RADIUS_3);
+
+        hexTileActor1 = new HexTileActor(new Sprite(assets.getHex3()), new Hexagon("1,1", 1, 1, 1), 3);
+//        hexTileActor2 = new HexTileActor(new Sprite(assets.getHex3()), new Hexagon("1,2", 1, 2, 2), 3);
+//        hexTileActor3 = new HexTileActor(new Sprite(assets.getHex3()), new Hexagon("1,3", 1, 3, 3), 3);
+        hexTileActor1.setPosition(0,(float)sqrt(3)*HEX_RADIUS_3*2);
+        System.out.println(hexTileActor1.getSprite().getWidth());
+        stage.addActor(hexTileActor1);
 
 
         // Input processor
@@ -114,8 +117,7 @@ public class GameScreen implements Screen, GlobalConstants {
     @Override
     public void render(float delta) {
         ScreenUtils.clearScreen(0.2f, 0, 0.6f, 1);
-//        stage.act(Gdx.graphics.getDeltaTime());
-//        stage.draw();
+
         camera.update();
         batch.setProjectionMatrix(camera.combined); //set the spriteBatch to draw what our stageViewport sees
 //
@@ -125,11 +127,14 @@ public class GameScreen implements Screen, GlobalConstants {
         hex1.draw(batch);
         hex2.draw(batch);
         hex3.draw(batch);
+        hexTileActor1.draw(batch, 1);
 //        hexTileActor1.draw(batch, 1f);
 //        for(Sprite s: redDots) {
 //            s.draw(batch);
 //        }
         batch.end();
+//        stage.act(Gdx.graphics.getDeltaTime());
+//        stage.draw();
     }
 
     public static class Hex {

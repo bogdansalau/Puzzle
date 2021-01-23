@@ -13,14 +13,14 @@ import com.bogdan.puzzle.model.Hexagon
 import kotlin.math.sqrt
 
 
-class HexTileActor(private val texture: TextureRegion, val hexagon: Hexagon, val gridSize: Int): Actor() {
+class HexTileActor(val sprite: Sprite, val hexagon: Hexagon, val gridSize: Int): Actor() {
 
     init {
-        setBounds(x, y, texture.regionWidth.toFloat(), texture.regionHeight.toFloat())
 //        texture.setSize(HEX_RADIUS_3*2, sqrt(3.0f)*(HEX_RADIUS_3))
+        sprite.setSize(2*HEX_RADIUS_3, sqrt(3.0f)*HEX_RADIUS_3)
         addListener(object : InputListener() {
             override fun touchDown(event: InputEvent?, x: Float, y: Float, pointer: Int, buttons: Int): Boolean {
-                println("Touched$name")
+                println("Touched $name")
                 isVisible = false
                 return true
             }
@@ -29,13 +29,17 @@ class HexTileActor(private val texture: TextureRegion, val hexagon: Hexagon, val
 
     // Implement the full form of draw() so we can handle rotation and scaling.
     override fun draw(batch: Batch, alpha: Float) {
-        batch.draw(texture, x, y, originX, originY, width, height,
-                scaleX, scaleY, rotation);
+        sprite.draw(batch);
+//        batch.draw(texture, x, y, originX, originY, width, height,
+//                scaleX, scaleY, rotation);
     }
 
     override fun setPosition(x: Float, y: Float) {
-        this.x = x - 0.5f * texture.regionWidth
-        this.y = y - 0.5f * texture.regionHeight
+        val newX = x - 0.5f * sprite.width
+        val newY = y - 0.5f * sprite.height
+        sprite.setPosition(newX, newY)
+        this.x = newX
+        this.y = newY
     }
 
     override fun hit(x: Float, y: Float, touchable: Boolean): Actor? {
